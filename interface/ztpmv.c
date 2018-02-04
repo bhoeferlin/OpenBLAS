@@ -152,7 +152,7 @@ void CNAME(enum CBLAS_ORDER order, enum CBLAS_UPLO Uplo,
 	   enum CBLAS_TRANSPOSE TransA, enum CBLAS_DIAG Diag,
 	   blasint n, FLOAT  *a, FLOAT  *x, blasint incx) {
 
-  int trans, uplo, unit;
+  int trans, uplo, unit, nthreads;
   blasint info;
   FLOAT *buffer;
 
@@ -162,9 +162,7 @@ void CNAME(enum CBLAS_ORDER order, enum CBLAS_UPLO Uplo,
   uplo  = -1;
   trans = -1;
   info  =  0;
-#ifdef SMP
-  int nthreads;
-#endif
+
 
   if (order == CblasColMajor) {
     if (Uplo == CblasUpper)         uplo  = 0;
