@@ -42,7 +42,7 @@ include ../../make.inc
 #  top-level make.inc
 #
 #  To remove the object files after the library is created, enter
-#       make clean
+#       make cleanobj
 #  To force the source files to be recompiled, enter, for example,
 #       make single FRC=FRC
 #
@@ -56,7 +56,7 @@ include ../../make.inc
 #######################################################################
 
 all: $(BLASLIB)
- 
+
 #---------------------------------------------------------
 #  Comment out the next 6 definitions if you already have
 #  the Level 1 BLAS.
@@ -88,8 +88,8 @@ $(ZB1AUX): $(FRC)
 #  Level 2 and Level 3 BLAS.  Comment it out only if you already have
 #  both the Level 2 and 3 BLAS.
 #---------------------------------------------------------------------
-ALLBLAS  = lsame.o xerbla.o xerbla_array.o
-$(ALLBLAS) : $(FRC)
+ALLBLAS = lsame.o xerbla.o xerbla_array.o
+$(ALLBLAS): $(FRC)
 
 #---------------------------------------------------------
 #  Comment out the next 4 definitions if you already have
@@ -119,7 +119,7 @@ $(ZBLAS2): $(FRC)
 #  Comment out the next 4 definitions if you already have
 #  the Level 3 BLAS.
 #---------------------------------------------------------
-SBLAS3 = sgemm.o ssymm.o ssyrk.o ssyr2k.o strmm.o strsm.o 
+SBLAS3 = sgemm.o ssymm.o ssyrk.o ssyr2k.o strmm.o strsm.o
 $(SBLAS3): $(FRC)
 
 CBLAS3 = cgemm.o csymm.o csyrk.o csyr2k.o ctrmm.o ctrsm.o \
@@ -133,39 +133,38 @@ ZBLAS3 = zgemm.o zsymm.o zsyrk.o zsyr2k.o ztrmm.o ztrsm.o \
 	zhemm.o zherk.o zher2k.o
 $(ZBLAS3): $(FRC)
 
-ALLOBJ=$(SBLAS1) $(SBLAS2) $(SBLAS3) $(DBLAS1) $(DBLAS2) $(DBLAS3)	\
+ALLOBJ = $(SBLAS1) $(SBLAS2) $(SBLAS3) $(DBLAS1) $(DBLAS2) $(DBLAS3) \
 	$(CBLAS1) $(CBLAS2) $(CBLAS3) $(ZBLAS1) \
 	$(ZBLAS2) $(ZBLAS3) $(ALLBLAS)
 
 $(BLASLIB): $(ALLOBJ)
-	$(ARCH) $(ARCHFLAGS) $@ $(ALLOBJ)
+	$(ARCH) $(ARCHFLAGS) $@ $^
 	$(RANLIB) $@
 
 single: $(SBLAS1) $(ALLBLAS) $(SBLAS2) $(SBLAS3)
-	$(ARCH) $(ARCHFLAGS) $(BLASLIB) $(SBLAS1) $(ALLBLAS) \
-	$(SBLAS2) $(SBLAS3)
+	$(ARCH) $(ARCHFLAGS) $(BLASLIB) $^
 	$(RANLIB) $(BLASLIB)
 
 double: $(DBLAS1) $(ALLBLAS) $(DBLAS2) $(DBLAS3)
-	$(ARCH) $(ARCHFLAGS) $(BLASLIB) $(DBLAS1) $(ALLBLAS) \
-	$(DBLAS2) $(DBLAS3)
+	$(ARCH) $(ARCHFLAGS) $(BLASLIB) $^
 	$(RANLIB) $(BLASLIB)
 
 complex: $(CBLAS1) $(CB1AUX) $(ALLBLAS) $(CBLAS2) $(CBLAS3)
-	$(ARCH) $(ARCHFLAGS) $(BLASLIB) $(CBLAS1) $(CB1AUX) \
-	$(ALLBLAS) $(CBLAS2) $(CBLAS3)
+	$(ARCH) $(ARCHFLAGS) $(BLASLIB) $^
 	$(RANLIB) $(BLASLIB)
 
 complex16: $(ZBLAS1) $(ZB1AUX) $(ALLBLAS) $(ZBLAS2) $(ZBLAS3)
-	$(ARCH) $(ARCHFLAGS) $(BLASLIB) $(ZBLAS1) $(ZB1AUX) \
-	$(ALLBLAS) $(ZBLAS2) $(ZBLAS3)
+	$(ARCH) $(ARCHFLAGS) $(BLASLIB) $^
 	$(RANLIB) $(BLASLIB)
 
 FRC:
 	@FRC=$(FRC)
 
-clean:
+clean: cleanobj cleanlib
+cleanobj:
 	rm -f *.o
+cleanlib:
+	#rm -f $(BLASLIB)  # May point to a system lib, e.g. -lblas
 
-.f.o: 
-	$(FORTRAN) $(OPTS) -c $< -o $@
+.f.o:
+	$(FORTRAN) $(OPTS) -c -o $@ $<

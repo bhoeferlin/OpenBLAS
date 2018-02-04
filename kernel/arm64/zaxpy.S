@@ -147,12 +147,13 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	fmla	v4.4s, v3.4s, v17.4s
 #endif
 
-#if !defined(CONJ)
+
 	fmla	v5.4s, v2.4s, v17.4s
-#else
-	fmls	v5.4s, v2.4s, v17.4s
-#endif
+#if !defined(CONJ)
 	fmla	v5.4s, v3.4s, v16.4s
+#else
+	fmls	v5.4s, v3.4s, v16.4s
+#endif
 
 	st2	{v4.4s, v5.4s}, [Y], #32
 #else // DOUBLE
@@ -165,12 +166,13 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #else
 	fmla	v4.2d, v3.2d, v17.2d
 #endif
-#if !defined(CONJ)
+
 	fmla	v5.2d, v2.2d, v17.2d
-#else
-	fmls	v5.2d, v2.2d, v17.2d
-#endif
+#if !defined(CONJ)
 	fmla	v5.2d, v3.2d, v16.2d
+#else
+	fmls	v5.2d, v3.2d, v16.2d
+#endif
 
 	st2	{v4.2d, v5.2d}, [Y], #32
 
@@ -183,13 +185,13 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #else
 	fmla	v20.2d, v19.2d, v17.2d
 #endif
-#if !defined(CONJ)
-	fmla	v21.2d, v18.2d, v17.2d
-#else
-	fmls	v21.2d, v18.2d, v17.2d
-#endif
-	fmla	v21.2d, v19.2d, v16.2d
 
+	fmla	v21.2d, v18.2d, v17.2d
+#if !defined(CONJ)
+	fmla	v21.2d, v19.2d, v16.2d
+#else
+	fmls	v21.2d, v19.2d, v16.2d
+#endif
 	st2	{v20.2d, v21.2d}, [Y], #32
 #endif
 	PRFM	PLDL1KEEP, [X, #512]
@@ -239,62 +241,62 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	PROLOGUE
 
 	cmp	N, xzr
-	ble	zaxpy_kernel_L999
+	ble	.Lzaxpy_kernel_L999
 
 	mov	Y_COPY, Y
 
 	fcmp	DA_R, #0.0
 	bne	.L1
 	fcmp	DA_I, #0.0
-	beq	zaxpy_kernel_L999
+	beq	.Lzaxpy_kernel_L999
 
 .L1:
 	INIT
 
 	cmp	INC_X, #1
-	bne	zaxpy_kernel_S_BEGIN
+	bne	.Lzaxpy_kernel_S_BEGIN
 	cmp	INC_Y, #1
-	bne	zaxpy_kernel_S_BEGIN
+	bne	.Lzaxpy_kernel_S_BEGIN
 
-zaxpy_kernel_F_BEGIN:
+.Lzaxpy_kernel_F_BEGIN:
 
 	asr	I, N, #2
 	cmp	I, xzr
-	beq	zaxpy_kernel_F1
+	beq	.Lzaxpy_kernel_F1
 
 	KERNEL_INIT_F4
 
-zaxpy_kernel_F4:
+.Lzaxpy_kernel_F4:
 
 	KERNEL_F4
 
 	subs	I, I, #1
-	bne	zaxpy_kernel_F4
+	bne	.Lzaxpy_kernel_F4
 
-zaxpy_kernel_F1:
+.Lzaxpy_kernel_F1:
 
 	ands	I, N, #3
-	ble	zaxpy_kernel_L999
+	ble	.Lzaxpy_kernel_L999
 
-zaxpy_kernel_F10:
+.Lzaxpy_kernel_F10:
 
 	KERNEL_F1
 
 	subs    I, I, #1
-        bne     zaxpy_kernel_F10
+        bne     .Lzaxpy_kernel_F10
 
 	mov	w0, wzr
 	ret
 
-zaxpy_kernel_S_BEGIN:
+.Lzaxpy_kernel_S_BEGIN:
 
 	INIT_S
 
 	asr	I, N, #2
 	cmp	I, xzr
-	ble	zaxpy_kernel_S1
+	ble	.Lzaxpy_kernel_S1
 
-zaxpy_kernel_S4:
+.Lzaxpy_kernel_S4:
 
 	KERNEL_S1
 	KERNEL_S1
@@ -302,21 +304,21 @@ zaxpy_kernel_S4:
 	KERNEL_S1
 
 	subs	I, I, #1
-	bne	zaxpy_kernel_S4
+	bne	.Lzaxpy_kernel_S4
 
-zaxpy_kernel_S1:
+.Lzaxpy_kernel_S1:
 
 	ands	I, N, #3
-	ble	zaxpy_kernel_L999
+	ble	.Lzaxpy_kernel_L999
 
-zaxpy_kernel_S10:
+.Lzaxpy_kernel_S10:
 
 	KERNEL_S1
 
 	subs    I, I, #1
-        bne     zaxpy_kernel_S10
+        bne     .Lzaxpy_kernel_S10
 
-zaxpy_kernel_L999:
+.Lzaxpy_kernel_L999:
 
 	mov	w0, wzr
 	ret

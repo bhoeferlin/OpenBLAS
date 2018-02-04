@@ -152,8 +152,11 @@ void NAME(char *UPLO, char *TRANS, char *DIAG,
 
 void CNAME(enum CBLAS_ORDER order, enum CBLAS_UPLO Uplo,
 	   enum CBLAS_TRANSPOSE TransA, enum CBLAS_DIAG Diag,
-	   blasint n, FLOAT  *a, blasint lda, FLOAT  *x, blasint incx) {
+	   blasint n, void  *va, blasint lda, void  *vx, blasint incx) {
 
+  FLOAT *a = (FLOAT*) va;
+  FLOAT *x = (FLOAT*) vx;
+  
   int trans, uplo, unit, buffer_size;
   blasint info;
   FLOAT *buffer;
@@ -243,6 +246,8 @@ void CNAME(enum CBLAS_ORDER order, enum CBLAS_UPLO Uplo,
 #endif
   {
     buffer_size = ((n - 1) / DTB_ENTRIES) * 2 * DTB_ENTRIES + 32 / sizeof(FLOAT);
+    // It seems to be required for some K8 or Barcelona CPU
+    buffer_size += 8;
     if(incx != 1)
       buffer_size += n * 2;
   }

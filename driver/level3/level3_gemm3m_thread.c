@@ -365,7 +365,7 @@ static int inner_thread(blas_arg_t *args, BLASLONG *range_m, BLASLONG *range_n, 
 
   buffer[0] = sb;
   for (i = 1; i < DIVIDE_RATE; i++) {
-    buffer[i] = buffer[i - 1] + GEMM3M_Q * ((div_n + GEMM3M_UNROLL_N - 1) & ~(GEMM3M_UNROLL_N - 1));
+    buffer[i] = buffer[i - 1] + GEMM3M_Q * (((div_n + GEMM3M_UNROLL_N - 1)/GEMM3M_UNROLL_N) * GEMM3M_UNROLL_N);
   }
 
   for(ls = 0; ls < k; ls += min_l){
@@ -384,7 +384,7 @@ static int inner_thread(blas_arg_t *args, BLASLONG *range_m, BLASLONG *range_n, 
       min_i = GEMM3M_P;
     } else {
       if (min_i > GEMM3M_P) {
-	min_i = (min_i / 2 + GEMM3M_UNROLL_M - 1) & ~(GEMM3M_UNROLL_M - 1);
+	min_i = ((min_i / 2 + GEMM3M_UNROLL_M - 1)/GEMM3M_UNROLL_M) * GEMM3M_UNROLL_M;
       }
     }
 
@@ -482,7 +482,7 @@ static int inner_thread(blas_arg_t *args, BLASLONG *range_m, BLASLONG *range_n, 
 	min_i = GEMM3M_P;
       } else
 	if (min_i > GEMM3M_P) {
-	  min_i = ((min_i + 1) / 2 + GEMM3M_UNROLL_M - 1) & ~(GEMM3M_UNROLL_M - 1);
+	  min_i = (((min_i + 1) / 2 + GEMM3M_UNROLL_M - 1)/GEMM3M_UNROLL_M) * GEMM3M_UNROLL_M;
 	}
 
       START_RPCC();
@@ -618,7 +618,7 @@ static int inner_thread(blas_arg_t *args, BLASLONG *range_m, BLASLONG *range_n, 
 	min_i = GEMM3M_P;
       } else
 	if (min_i > GEMM3M_P) {
-	  min_i = ((min_i + 1) / 2 + GEMM3M_UNROLL_M - 1) & ~(GEMM3M_UNROLL_M - 1);
+	  min_i = (((min_i + 1) / 2 + GEMM3M_UNROLL_M - 1)/GEMM3M_UNROLL_M) * GEMM3M_UNROLL_M;
 	}
 
       START_RPCC();
@@ -754,7 +754,7 @@ static int inner_thread(blas_arg_t *args, BLASLONG *range_m, BLASLONG *range_n, 
 	min_i = GEMM3M_P;
       } else
 	if (min_i > GEMM3M_P) {
-	  min_i = ((min_i + 1) / 2 + GEMM3M_UNROLL_M - 1) & ~(GEMM3M_UNROLL_M - 1);
+	  min_i = (((min_i + 1) / 2 + GEMM3M_UNROLL_M - 1)/GEMM3M_UNROLL_M) * GEMM3M_UNROLL_M;
 	}
 
       START_RPCC();
@@ -974,7 +974,7 @@ static int gemm_driver(blas_arg_t *args, BLASLONG *range_m, BLASLONG
 int CNAME(blas_arg_t *args, BLASLONG *range_m, BLASLONG *range_n, FLOAT *sa, FLOAT *sb, BLASLONG mypos){
 
   BLASLONG m = args -> m;
-  BLASLONG n = args -> n;
+  // BLASLONG n = args -> n;
   BLASLONG nthreads = args -> nthreads;
   BLASLONG divN, divT;
   int mode;
@@ -985,13 +985,14 @@ int CNAME(blas_arg_t *args, BLASLONG *range_m, BLASLONG *range_n, FLOAT *sa, FLO
 
     m = m_to - m_from;
   }
-
+/*
   if (range_n) {
     BLASLONG n_from = *(((BLASLONG *)range_n) + 0);
     BLASLONG n_to   = *(((BLASLONG *)range_n) + 1);
 
     n = n_to - n_from;
   }
+*/
 
   if ((args -> m < nthreads * SWITCH_RATIO) || (args -> n < nthreads * SWITCH_RATIO)) {
     GEMM3M_LOCAL(args, range_m, range_n, sa, sb, 0);

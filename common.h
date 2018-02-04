@@ -332,12 +332,20 @@ typedef int blasint;
 #endif
 #endif
 
+#ifdef POWER8
+#ifndef YIELDING
+#define YIELDING        __asm__ __volatile__ ("nop;nop;nop;nop;nop;nop;nop;nop;\n");
+#endif
+#endif
 
+
+/*
 #ifdef PILEDRIVER
 #ifndef YIELDING
 #define YIELDING        __asm__ __volatile__ ("nop;nop;nop;nop;nop;nop;nop;nop;\n");
 #endif
 #endif
+*/
 
 /*
 #ifdef STEAMROLLER
@@ -396,6 +404,10 @@ please https://github.com/xianyi/OpenBLAS/issues/246
 #include "common_sparc.h"
 #endif
 
+#ifdef ARCH_MIPS
+#include "common_mips.h"
+#endif
+
 #ifdef ARCH_MIPS64
 #include "common_mips64.h"
 #endif
@@ -408,13 +420,22 @@ please https://github.com/xianyi/OpenBLAS/issues/246
 #include "common_arm64.h"
 #endif
 
+#ifdef ARCH_ZARCH
+#include "common_zarch.h"
+#endif
+
 #ifndef ASSEMBLER
+#ifdef OS_WINDOWSSTORE
+typedef char env_var_t[MAX_PATH];
+#define readenv(p, n) 0
+#else
 #ifdef OS_WINDOWS
 typedef char env_var_t[MAX_PATH];
 #define readenv(p, n) GetEnvironmentVariable((LPCTSTR)(n), (LPTSTR)(p), sizeof(p))
 #else
 typedef char* env_var_t;
 #define readenv(p, n) ((p)=getenv(n))
+#endif
 #endif
 
 #if !defined(RPCC_DEFINED) && !defined(OS_WINDOWS)
@@ -474,6 +495,33 @@ static void __inline blas_lock(volatile BLASULONG *address){
 #define MMAP_POLICY (MAP_PRIVATE | MAP_ANONYMOUS)
 #endif
 
+#ifndef ASSEMBLER
+/* C99 supports complex floating numbers natively, which GCC also offers as an
+   extension since version 3.0.  If neither are available, use a compatible
+   structure as fallback (see Clause 6.2.5.13 of the C99 standard). */
+#if ((defined(__STDC_IEC_559_COMPLEX__) || __STDC_VERSION__ >= 199901L || \
+      (__GNUC__ >= 3 && !defined(__cplusplus))) && !(defined(FORCE_OPENBLAS_COMPLEX_STRUCT))) && !defined(_MSC_VER)
+  #define OPENBLAS_COMPLEX_C99
+  #ifndef __cplusplus
+    #include <complex.h>
+  #endif
+  typedef float _Complex openblas_complex_float;
+  typedef double _Complex openblas_complex_double;
+  typedef xdouble _Complex openblas_complex_xdouble;
+  #define openblas_make_complex_float(real, imag)    ((real) + ((imag) * _Complex_I))
+  #define openblas_make_complex_double(real, imag)   ((real) + ((imag) * _Complex_I))
+  #define openblas_make_complex_xdouble(real, imag)  ((real) + ((imag) * _Complex_I))
+#else
+  #define OPENBLAS_COMPLEX_STRUCT
+  typedef struct { float real, imag; } openblas_complex_float;
+  typedef struct { double real, imag; } openblas_complex_double;
+  typedef struct { xdouble real, imag; } openblas_complex_xdouble;
+  #define openblas_make_complex_float(real, imag)    {(real), (imag)}
+  #define openblas_make_complex_double(real, imag)   {(real), (imag)}
+  #define openblas_make_complex_xdouble(real, imag)  {(real), (imag)}
+#endif
+#endif
+
 #include "param.h"
 #include "common_param.h"
 
@@ -503,31 +551,6 @@ static void __inline blas_lock(volatile BLASULONG *address){
 #include <stdio.h>
 #endif  // NOINCLUDE
 
-/* C99 supports complex floating numbers natively, which GCC also offers as an
-   extension since version 3.0.  If neither are available, use a compatible
-   structure as fallback (see Clause 6.2.5.13 of the C99 standard). */
-#if ((defined(__STDC_IEC_559_COMPLEX__) || __STDC_VERSION__ >= 199901L || \
-      (__GNUC__ >= 3 && !defined(__cplusplus))) && !(defined(FORCE_OPENBLAS_COMPLEX_STRUCT)))
-  #define OPENBLAS_COMPLEX_C99
-  #ifndef __cplusplus
-    #include <complex.h>
-  #endif
-  typedef float _Complex openblas_complex_float;
-  typedef double _Complex openblas_complex_double;
-  typedef xdouble _Complex openblas_complex_xdouble;
-  #define openblas_make_complex_float(real, imag)    ((real) + ((imag) * _Complex_I))
-  #define openblas_make_complex_double(real, imag)   ((real) + ((imag) * _Complex_I))
-  #define openblas_make_complex_xdouble(real, imag)  ((real) + ((imag) * _Complex_I))
-#else
-  #define OPENBLAS_COMPLEX_STRUCT
-  typedef struct { float real, imag; } openblas_complex_float;
-  typedef struct { double real, imag; } openblas_complex_double;
-  typedef struct { xdouble real, imag; } openblas_complex_xdouble;
-  #define openblas_make_complex_float(real, imag)    {(real), (imag)}
-  #define openblas_make_complex_double(real, imag)   {(real), (imag)}
-  #define openblas_make_complex_xdouble(real, imag)  {(real), (imag)}
-#endif
-
 #ifdef XDOUBLE
 #define OPENBLAS_COMPLEX_FLOAT openblas_complex_xdouble
 #define OPENBLAS_MAKE_COMPLEX_FLOAT(r,i) openblas_make_complex_xdouble(r,i)
@@ -540,8 +563,13 @@ static void __inline blas_lock(volatile BLASULONG *address){
 #endif
 
 #if defined(C_PGI) || defined(C_SUN)
-#define CREAL(X)	(*((FLOAT *)&X + 0))
-#define CIMAG(X)	(*((FLOAT *)&X + 1))
+  #if defined(__STDC_IEC_559_COMPLEX__)
+     #define CREAL(X)   creal(X)
+     #define CIMAG(X)   cimag(X)
+  #else
+     #define CREAL(X)	(*((FLOAT *)&X + 0))
+     #define CIMAG(X)	(*((FLOAT *)&X + 1))
+  #endif
 #else
 #ifdef OPENBLAS_COMPLEX_STRUCT
 #define CREAL(Z)	((Z).real)
@@ -614,8 +642,13 @@ void gotoblas_profile_init(void);
 void gotoblas_profile_quit(void);
 
 #ifdef USE_OPENMP
+#ifndef C_MSVC
 int omp_in_parallel(void);
 int omp_get_num_procs(void);
+#else
+__declspec(dllimport) int __cdecl omp_in_parallel(void);
+__declspec(dllimport) int __cdecl omp_get_num_procs(void);
+#endif
 #else
 #ifdef __ELF__
 int omp_in_parallel  (void) __attribute__ ((weak));
@@ -628,7 +661,11 @@ static __inline void blas_unlock(volatile BLASULONG *address){
   *address = 0;
 }
 
-
+#ifdef OS_WINDOWSSTORE
+static __inline int readenv_atoi(char *env) {
+	return 0;
+}
+#else
 #ifdef OS_WINDOWS
 static __inline int readenv_atoi(char *env) {
   env_var_t p;
@@ -643,7 +680,7 @@ static __inline int readenv_atoi(char *env) {
 	return(0);
 }
 #endif
-
+#endif
 
 #if !defined(XDOUBLE) || !defined(QUAD_PRECISION)
 

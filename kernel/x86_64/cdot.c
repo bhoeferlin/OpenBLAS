@@ -32,9 +32,9 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #if defined(BULLDOZER)
 #include "cdot_microk_bulldozer-2.c"
-#elif defined(STEAMROLLER) || defined(PILEDRIVER)
+#elif defined(STEAMROLLER) || defined(PILEDRIVER)  || defined(EXCAVATOR)
 #include "cdot_microk_steamroller-2.c"
-#elif defined(HASWELL)
+#elif defined(HASWELL) || defined(ZEN)
 #include "cdot_microk_haswell-2.c"
 #elif defined(SANDYBRIDGE)
 #include "cdot_microk_sandy-2.c"
@@ -91,17 +91,15 @@ static void cdot_kernel_16(BLASLONG n, FLOAT *x, FLOAT *y, FLOAT *d)
 
 #endif
 
-FLOAT _Complex CNAME(BLASLONG n, FLOAT *x, BLASLONG inc_x, FLOAT *y, BLASLONG inc_y)
+OPENBLAS_COMPLEX_FLOAT CNAME(BLASLONG n, FLOAT *x, BLASLONG inc_x, FLOAT *y, BLASLONG inc_y)
 {
 	BLASLONG i;
 	BLASLONG ix,iy;
-	FLOAT _Complex result;
 	FLOAT  dot[8] = { 0.0, 0.0, 0.0 , 0.0, 0.0, 0.0, 0.0, 0.0 } ; 
 
 	if ( n <= 0 ) 
 	{
-	        __real__ result = 0.0 ;
-        	__imag__ result = 0.0 ;
+	    OPENBLAS_COMPLEX_FLOAT result = OPENBLAS_MAKE_COMPLEX_FLOAT (0.0, 0.0) ;
 		return(result);
 
 	}
@@ -161,11 +159,13 @@ FLOAT _Complex CNAME(BLASLONG n, FLOAT *x, BLASLONG inc_x, FLOAT *y, BLASLONG in
 	}
 
 #if !defined(CONJ)
-	__real__ result = dot[0] - dot[1];
-	__imag__ result = dot[4] + dot[5];
+	OPENBLAS_COMPLEX_FLOAT result = OPENBLAS_MAKE_COMPLEX_FLOAT (dot[0]-dot[1], dot[4]+dot[5]) ;
+//	CREAL(result) = dot[0] - dot[1];
+//	CIMAG(result) = dot[4] + dot[5];
 #else
-	__real__ result = dot[0] + dot[1];
-	__imag__ result = dot[4] - dot[5];
+	OPENBLAS_COMPLEX_FLOAT result = OPENBLAS_MAKE_COMPLEX_FLOAT (dot[0]+dot[1], dot[4]-dot[5]) ;
+//	CREAL(result) = dot[0] + dot[1];
+//	CIMAG(result) = dot[4] - dot[5];
 
 #endif
 

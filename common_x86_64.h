@@ -245,6 +245,10 @@ static __inline int blas_quickdivide(unsigned int x, unsigned int y){
 #define RETURN_BY_STACK
 #endif
 
+#ifdef F_INTERFACE_FLANG
+#define RETURN_BY_STACK
+#endif
+
 #ifdef F_INTERFACE_PGI
 #define RETURN_BY_STACK
 #endif
@@ -396,7 +400,7 @@ REALNAME:
 
 #define PROFCODE
 
-#define EPILOGUE .end	 REALNAME
+#define EPILOGUE .end
 #endif
 
 #if defined(OS_LINUX) || defined(OS_FREEBSD) || defined(OS_NETBSD) || defined(__ELF__) || defined(C_PGI)

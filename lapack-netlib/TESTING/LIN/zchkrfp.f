@@ -2,14 +2,14 @@
 *
 *  =========== DOCUMENTATION ===========
 *
-* Online html documentation available at 
-*            http://www.netlib.org/lapack/explore-html/ 
+* Online html documentation available at
+*            http://www.netlib.org/lapack/explore-html/
 *
 *  Definition:
 *  ===========
 *
 *       PROGRAM ZCHKRFP
-* 
+*
 *
 *> \par Purpose:
 *  =============
@@ -47,10 +47,10 @@
 *  Authors:
 *  ========
 *
-*> \author Univ. of Tennessee 
-*> \author Univ. of California Berkeley 
-*> \author Univ. of Colorado Denver 
-*> \author NAG Ltd. 
+*> \author Univ. of Tennessee
+*> \author Univ. of California Berkeley
+*> \author Univ. of Colorado Denver
+*> \author NAG Ltd.
 *
 *> \date April 2012
 *
@@ -59,7 +59,7 @@
 *  =====================================================================
       PROGRAM ZCHKRFP
 *
-*  -- LAPACK test routine (version 3.4.1) --
+*  -- LAPACK test routine (version 3.7.1) --
 *  -- LAPACK is a software package provided by Univ. of Tennessee,    --
 *  -- Univ. of California Berkeley, Univ. of Colorado Denver and NAG Ltd..--
 *     April 2012
@@ -218,11 +218,6 @@
          STOP
       END IF
 *
-      IF( FATAL ) THEN
-         WRITE( NOUT, FMT = 9999 )
-         STOP
-      END IF
-*
 *     Calculate and print the machine dependent constants.
 *
       EPS = DLAMCH( 'Underflow threshold' )
@@ -253,7 +248,7 @@
       CALL ZDRVRF1( NOUT, NN, NVAL, THRESH, WORKA, NMAX, WORKARF,
      +              D_WORK_ZLANHE )
 *
-*    Test the convertion routines:
+*    Test the conversion routines:
 *       zhfttp, ztpthf, ztfttr, ztrttf, ztrttp and ztpttr.
 *
       CALL ZDRVRF2( NOUT, NN, NVAL, WORKA, NMAX, WORKARF,
@@ -264,7 +259,7 @@
       CALL ZDRVRF3( NOUT, NN, NVAL, THRESH, WORKA, NMAX, WORKARF,
      +              WORKAINV, WORKAFAC, D_WORK_ZLANHE,
      +              Z_WORK_ZPOT03, Z_WORK_ZPOT02 )
- 
+
 *
 *    Test the routine: zhfrk
 *

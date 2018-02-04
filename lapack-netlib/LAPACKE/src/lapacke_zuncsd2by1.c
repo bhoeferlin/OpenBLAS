@@ -28,7 +28,7 @@
 *****************************************************************************
 * Contents: Native high-level C interface to LAPACK function zuncsd2by1
 * Author: Intel Corporation
-* Generated November 2015
+* Generated June 2016
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -37,7 +37,7 @@ lapack_int LAPACKE_zuncsd2by1( int matrix_layout, char jobu1, char jobu2,
                            char jobv1t, lapack_int m, lapack_int p, lapack_int q,
                            lapack_complex_double* x11, lapack_int ldx11,
                            lapack_complex_double* x21, lapack_int ldx21,
-                           lapack_complex_double* theta, lapack_complex_double* u1,
+                           double* theta, lapack_complex_double* u1,
                            lapack_int ldu1, lapack_complex_double* u2,
                            lapack_int ldu2, lapack_complex_double* v1t, lapack_int ldv1t )
 {
@@ -55,17 +55,18 @@ lapack_int LAPACKE_zuncsd2by1( int matrix_layout, char jobu1, char jobu2,
         return -1;
     }
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    /* Optionally check input matrices for NaNs */
-    nrows_x11 =  p ;
-    nrows_x21 =  m-p ;
-    if( LAPACKE_zge_nancheck( matrix_layout, nrows_x11, q, x11, ldx11 ) ) {
-        return -8;
+    if( LAPACKE_get_nancheck() ) {
+        /* Optionally check input matrices for NaNs */
+        nrows_x11 = p;
+        nrows_x21 = m-p;
+        if( LAPACKE_zge_nancheck( matrix_layout, nrows_x11, q, x11, ldx11 ) ) {
+            return -8;
+        }
+ 
+        if( LAPACKE_zge_nancheck( matrix_layout, nrows_x21, q, x21, ldx21 ) ) {
+            return -9;
+        }
     }
-
-    if( LAPACKE_zge_nancheck( matrix_layout, nrows_x21, q, x21, ldx21 ) ) {
-        return -9;
-    }
-
 #endif
     /* Allocate memory for working array(s) */
     iwork = (lapack_int*)LAPACKE_malloc( sizeof(lapack_int) * MAX(1,m-MIN(MIN(p,m-p),MIN(q,m-q))) );
@@ -74,7 +75,7 @@ lapack_int LAPACKE_zuncsd2by1( int matrix_layout, char jobu1, char jobu2,
         goto exit_level_0;
     }
     /* Query optimal working array(s) size */
-    info = LAPACKE_zuncsd2by1_work( matrix_layout, jobu1, jobu2, jobv1t, m, p, q, 
+    info = LAPACKE_zuncsd2by1_work( matrix_layout, jobu1, jobu2, jobv1t, m, p, q,
                                 x11, ldx11, x21, ldx21, theta, u1, ldu1, u2,
                                 ldu2, v1t, ldv1t, &work_query,
                                 lwork, &rwork_query, lrwork, iwork );
@@ -95,7 +96,7 @@ lapack_int LAPACKE_zuncsd2by1( int matrix_layout, char jobu1, char jobu2,
         goto exit_level_2;
     }
     /* Call middle-level interface */
-    info = LAPACKE_zuncsd2by1_work( matrix_layout, jobu1, jobu2, jobv1t, m, p, q, 
+    info = LAPACKE_zuncsd2by1_work( matrix_layout, jobu1, jobu2, jobv1t, m, p, q,
                                 x11, ldx11, x21, ldx21, theta, u1, ldu1, u2,
                                 ldu2, v1t, ldv1t, work, lwork, rwork, lrwork, iwork );
     /* Release memory and exit */

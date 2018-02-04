@@ -2,14 +2,14 @@
 *
 *  =========== DOCUMENTATION ===========
 *
-* Online html documentation available at 
-*            http://www.netlib.org/lapack/explore-html/ 
+* Online html documentation available at
+*            http://www.netlib.org/lapack/explore-html/
 *
 *  Definition:
 *  ===========
 *
 *       SUBROUTINE CGEMV(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
-* 
+*
 *       .. Scalar Arguments ..
 *       COMPLEX ALPHA,BETA
 *       INTEGER INCX,INCY,LDA,M,N
@@ -18,7 +18,7 @@
 *       .. Array Arguments ..
 *       COMPLEX A(LDA,*),X(*),Y(*)
 *       ..
-*  
+*
 *
 *> \par Purpose:
 *  =============
@@ -73,7 +73,7 @@
 *>
 *> \param[in] A
 *> \verbatim
-*>          A is COMPLEX array of DIMENSION ( LDA, n ).
+*>          A is COMPLEX array, dimension ( LDA, N )
 *>           Before entry, the leading m by n part of the array A must
 *>           contain the matrix of coefficients.
 *> \endverbatim
@@ -88,7 +88,7 @@
 *>
 *> \param[in] X
 *> \verbatim
-*>          X is COMPLEX array of DIMENSION at least
+*>          X is COMPLEX array, dimension at least
 *>           ( 1 + ( n - 1 )*abs( INCX ) ) when TRANS = 'N' or 'n'
 *>           and at least
 *>           ( 1 + ( m - 1 )*abs( INCX ) ) otherwise.
@@ -112,7 +112,7 @@
 *>
 *> \param[in,out] Y
 *> \verbatim
-*>          Y is COMPLEX array of DIMENSION at least
+*>          Y is COMPLEX array, dimension at least
 *>           ( 1 + ( m - 1 )*abs( INCY ) ) when TRANS = 'N' or 'n'
 *>           and at least
 *>           ( 1 + ( n - 1 )*abs( INCY ) ) otherwise.
@@ -131,12 +131,12 @@
 *  Authors:
 *  ========
 *
-*> \author Univ. of Tennessee 
-*> \author Univ. of California Berkeley 
-*> \author Univ. of Colorado Denver 
-*> \author NAG Ltd. 
+*> \author Univ. of Tennessee
+*> \author Univ. of California Berkeley
+*> \author Univ. of Colorado Denver
+*> \author NAG Ltd.
 *
-*> \date November 2015
+*> \date December 2016
 *
 *> \ingroup complex_blas_level2
 *
@@ -158,10 +158,10 @@
 *  =====================================================================
       SUBROUTINE CGEMV(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
 *
-*  -- Reference BLAS level2 routine (version 3.6.0) --
+*  -- Reference BLAS level2 routine (version 3.7.0) --
 *  -- Reference BLAS is a software package provided by Univ. of Tennessee,    --
 *  -- Univ. of California Berkeley, Univ. of Colorado Denver and NAG Ltd..--
-*     November 2015
+*     December 2016
 *
 *     .. Scalar Arguments ..
       COMPLEX ALPHA,BETA

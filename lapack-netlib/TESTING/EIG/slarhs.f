@@ -2,15 +2,15 @@
 *
 *  =========== DOCUMENTATION ===========
 *
-* Online html documentation available at 
-*            http://www.netlib.org/lapack/explore-html/ 
+* Online html documentation available at
+*            http://www.netlib.org/lapack/explore-html/
 *
 *  Definition:
 *  ===========
 *
 *       SUBROUTINE SLARHS( PATH, XTYPE, UPLO, TRANS, M, N, KL, KU, NRHS,
 *                          A, LDA, X, LDX, B, LDB, ISEED, INFO )
-* 
+*
 *       .. Scalar Arguments ..
 *       CHARACTER          TRANS, UPLO, XTYPE
 *       CHARACTER*3        PATH
@@ -20,7 +20,7 @@
 *       INTEGER            ISEED( 4 )
 *       REAL               A( LDA, * ), B( LDB, * ), X( LDX, * )
 *       ..
-*  
+*
 *
 *> \par Purpose:
 *  =============
@@ -184,19 +184,19 @@
 *> \param[out] INFO
 *> \verbatim
 *>          INFO is INTEGER
-*>          = 0:  successful exit
-*>          < 0:  if INFO = -i, the i-th argument had an illegal value
+*>          = 0: successful exit
+*>          < 0: if INFO = -i, the i-th argument had an illegal value
 *> \endverbatim
 *
 *  Authors:
 *  ========
 *
-*> \author Univ. of Tennessee 
-*> \author Univ. of California Berkeley 
-*> \author Univ. of Colorado Denver 
-*> \author NAG Ltd. 
+*> \author Univ. of Tennessee
+*> \author Univ. of California Berkeley
+*> \author Univ. of Colorado Denver
+*> \author NAG Ltd.
 *
-*> \date November 2011
+*> \date June 2017
 *
 *> \ingroup single_eig
 *
@@ -204,10 +204,10 @@
       SUBROUTINE SLARHS( PATH, XTYPE, UPLO, TRANS, M, N, KL, KU, NRHS,
      $                   A, LDA, X, LDX, B, LDB, ISEED, INFO )
 *
-*  -- LAPACK test routine (version 3.4.0) --
+*  -- LAPACK test routine (version 3.7.1) --
 *  -- LAPACK is a software package provided by Univ. of Tennessee,    --
 *  -- Univ. of California Berkeley, Univ. of Colorado Denver and NAG Ltd..--
-*     November 2011
+*     June 2017
 *
 *     .. Scalar Arguments ..
       CHARACTER          TRANS, UPLO, XTYPE

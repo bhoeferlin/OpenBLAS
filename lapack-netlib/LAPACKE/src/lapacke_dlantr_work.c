@@ -28,7 +28,7 @@
 *****************************************************************************
 * Contents: Native middle-level C interface to LAPACK function dlantr
 * Author: Intel Corporation
-* Generated November 2015
+* Generated June 2016
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -38,10 +38,10 @@ double LAPACKE_dlantr_work( int matrix_layout, char norm, char uplo,
                                 const double* a, lapack_int lda, double* work )
 {
     lapack_int info = 0;
-	double res = 0.;
+    double res = 0.;
     if( matrix_layout == LAPACK_COL_MAJOR ) {
         /* Call LAPACK function and adjust info */
-        LAPACK_dlantr( &norm, &uplo, &diag, &m, &n, a, &lda, work );
+        res = LAPACK_dlantr( &norm, &uplo, &diag, &m, &n, a, &lda, work );
         if( info < 0 ) {
             info = info - 1;
         }

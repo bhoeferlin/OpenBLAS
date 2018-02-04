@@ -28,11 +28,11 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "common.h"
 
 
-#if defined(HASWELL)
+#if defined(HASWELL) || defined(ZEN)
 #include "zscal_microk_haswell-2.c"
 #elif defined(BULLDOZER)  || defined(PILEDRIVER)
 #include "zscal_microk_bulldozer-2.c"
-#elif defined(STEAMROLLER)
+#elif defined(STEAMROLLER)  || defined(EXCAVATOR)
 #include "zscal_microk_steamroller-2.c"
 #endif
 

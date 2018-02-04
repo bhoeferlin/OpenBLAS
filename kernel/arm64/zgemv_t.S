@@ -41,6 +41,9 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define J	x11	/* loop variable */
 #define I	x12	/* loop variable */
 
+#define A_PRE_SIZE	768
+#define X_PRE_SIZE	768
+
 /*******************************************************************************
 * Macro definitions
 *******************************************************************************/
@@ -139,6 +142,8 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 	ld2	{v11.4s, v12.4s}, [X_PTR], #32
 	ld2	{v13.4s, v14.4s}, [A_PTR], #32
+	prfm    PLDL1STRM, [X_PTR, #X_PRE_SIZE]
+	prfm    PLDL1STRM, [A_PTR, #A_PRE_SIZE]
 
 #if (!defined(CONJ) && !defined(XCONJ)) || (defined(CONJ) && defined(XCONJ))
 	fmla	v9.4s,  v11.4s, v13.4s		// [+ R(X) * A_R]
@@ -155,7 +160,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #else // DOUBLE
 	ld2	{v11.2d, v12.2d}, [X_PTR], #32
 	ld2	{v13.2d, v14.2d}, [A_PTR], #32
-	prfm    PLDL1STRM, [X_PTR, #512]
+	prfm    PLDL1STRM, [X_PTR, #X_PRE_SIZE]
 
 #if (!defined(CONJ) && !defined(XCONJ)) || (defined(CONJ) && defined(XCONJ))
 	fmla	v9.2d,  v11.2d, v13.2d		// [+ R(X) * A_R]
@@ -171,7 +176,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 	ld2	{v17.2d, v18.2d}, [X_PTR], #32
 	ld2	{v19.2d, v20.2d}, [A_PTR], #32
-	prfm    PLDL1STRM, [A_PTR, #512]
+	prfm    PLDL1STRM, [A_PTR, #A_PRE_SIZE]
 
 #if (!defined(CONJ) && !defined(XCONJ)) || (defined(CONJ) && defined(XCONJ))
 	fmla	v15.2d, v17.2d, v19.2d		// [+ R(X) * A_R]
@@ -287,9 +292,9 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	SAVE_REGS
 
 	cmp	N, xzr
-	ble	zgemv_t_kernel_L999
+	ble	.Lzgemv_t_kernel_L999
 	cmp	M, xzr
-	ble	zgemv_t_kernel_L999
+	ble	.Lzgemv_t_kernel_L999
 
 	lsl	LDA, LDA, #SHZ
 	lsl	INC_Y, INC_Y, #SHZ
@@ -298,9 +303,9 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	INIT
 
 	cmp	INC_X, #1
-	bne	zgemv_t_kernel_S_BEGIN
+	bne	.Lzgemv_t_kernel_S_BEGIN
 
-zgemv_t_kernel_F_LOOP:
+.Lzgemv_t_kernel_F_LOOP:
 
 	mov	A_PTR, A
 	mov	X_PTR, X
@@ -309,30 +314,30 @@ zgemv_t_kernel_F_LOOP:
 
 	asr	I, M, #2
 	cmp	I, xzr
-	beq	zgemv_t_kernel_F1
+	beq	.Lzgemv_t_kernel_F1
 
-zgemv_t_kernel_F4:
+.Lzgemv_t_kernel_F4:
 
 	KERNEL_F4
 
 	subs	I, I, #1
-	bne	zgemv_t_kernel_F4
+	bne	.Lzgemv_t_kernel_F4
 
 	KERNEL_F4_FINALIZE
 
-zgemv_t_kernel_F1:
+.Lzgemv_t_kernel_F1:
 
 	ands	I, M, #3
-	ble	zgemv_t_kernel_F_END
+	ble	.Lzgemv_t_kernel_F_END
 
-zgemv_t_kernel_F10:
+.Lzgemv_t_kernel_F10:
 
 	KERNEL_F1
 
 	subs    I, I, #1
-        bne     zgemv_t_kernel_F10
+        bne     .Lzgemv_t_kernel_F10
 
-zgemv_t_kernel_F_END:
+.Lzgemv_t_kernel_F_END:
 
 #if !defined(DOUBLE)
 	ld1	{v4.2s}, [Y]
@@ -350,15 +355,15 @@ zgemv_t_kernel_F_END:
 
 	add	A, A, LDA
 	subs    J, J, #1
-        bne     zgemv_t_kernel_F_LOOP
+        bne     .Lzgemv_t_kernel_F_LOOP
 
-	b	zgemv_t_kernel_L999
+	b	.Lzgemv_t_kernel_L999
 
-zgemv_t_kernel_S_BEGIN:
+.Lzgemv_t_kernel_S_BEGIN:
 
 	INIT_S
 
-zgemv_t_kernel_S_LOOP:
+.Lzgemv_t_kernel_S_LOOP:
 
 	mov	A_PTR, A
 	mov	X_PTR, X
@@ -366,9 +371,9 @@ zgemv_t_kernel_S_LOOP:
 
 	asr	I, M, #2
 	cmp	I, xzr
-	ble	zgemv_t_kernel_S1
+	ble	.Lzgemv_t_kernel_S1
 
-zgemv_t_kernel_S4:
+.Lzgemv_t_kernel_S4:
 
 	KERNEL_S1
 	KERNEL_S1
@@ -376,21 +381,21 @@ zgemv_t_kernel_S4:
 	KERNEL_S1
 
 	subs	I, I, #1
-	bne	zgemv_t_kernel_S4
+	bne	.Lzgemv_t_kernel_S4
 
-zgemv_t_kernel_S1:
+.Lzgemv_t_kernel_S1:
 
 	ands	I, M, #3
-	ble	zgemv_t_kernel_S_END
+	ble	.Lzgemv_t_kernel_S_END
 
-zgemv_t_kernel_S10:
+.Lzgemv_t_kernel_S10:
 
 	KERNEL_S1
 
 	subs    I, I, #1
-        bne     zgemv_t_kernel_S10
+        bne     .Lzgemv_t_kernel_S10
 
-zgemv_t_kernel_S_END:
+.Lzgemv_t_kernel_S_END:
 
 #if !defined(DOUBLE)
 	ld1	{v4.2s}, [Y]
@@ -408,9 +413,9 @@ zgemv_t_kernel_S_END:
 
 	add	A, A, LDA
 	subs    J, J, #1
-        bne     zgemv_t_kernel_S_LOOP
+        bne     .Lzgemv_t_kernel_S_LOOP
 
-zgemv_t_kernel_L999:
+.Lzgemv_t_kernel_L999:
 	RESTORE_REGS
 	mov	w0, wzr
 	ret

@@ -31,7 +31,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #if defined(NEHALEM)
 #include "dgemv_n_microk_nehalem-4.c"
-#elif defined(HASWELL) || defined(STEAMROLLER)
+#elif defined(HASWELL) || defined(ZEN) || defined(STEAMROLLER) || defined(EXCAVATOR)
 #include "dgemv_n_microk_haswell-4.c"
 #endif
 
@@ -82,7 +82,7 @@ static void dgemv_kernel_4x2( BLASLONG n, FLOAT **ap, FLOAT *x, FLOAT *y, FLOAT 
 	"shufpd $0,  %%xmm12, %%xmm12    \n\t"	
 	"shufpd $0,  %%xmm13, %%xmm13    \n\t"	
 
-	".align 16				       \n\t"
+	//	".align 16				       \n\t"
 	"1:				       \n\t"
 	"movups	       (%3,%0,8), %%xmm4	       \n\t"	// 2 * y
 	"movups	     16(%3,%0,8), %%xmm5	       \n\t"	// 2 * y
@@ -129,7 +129,7 @@ static void dgemv_kernel_4x2( BLASLONG n, FLOAT **ap, FLOAT *x, FLOAT *y, FLOAT 
 
 #endif
 
-#ifndef HAVE_KERNEL_4x2
+#ifndef HAVE_KERNEL_4x1
 
 static void dgemv_kernel_4x1(BLASLONG n, FLOAT *ap, FLOAT *x, FLOAT *y, FLOAT *alpha) __attribute__ ((noinline));
 
@@ -144,7 +144,7 @@ static void dgemv_kernel_4x1(BLASLONG n, FLOAT *ap, FLOAT *x, FLOAT *y, FLOAT *a
         "mulsd          (%5), %%xmm12            \n\t"  // alpha 
         "shufpd $0,  %%xmm12, %%xmm12            \n\t"
 
-        ".align 16                               \n\t"
+	//        ".align 16                               \n\t"
         "1:                             \n\t"
         "movups       (%4,%0,8), %%xmm8          \n\t"  // 2 * a
         "movups     16(%4,%0,8), %%xmm9          \n\t"  // 2 * a
@@ -204,7 +204,6 @@ static void add_y(BLASLONG n, FLOAT *src, FLOAT *dest, BLASLONG inc_dest)
 int CNAME(BLASLONG m, BLASLONG n, BLASLONG dummy1, FLOAT alpha, FLOAT *a, BLASLONG lda, FLOAT *x, BLASLONG inc_x, FLOAT *y, BLASLONG inc_y, FLOAT *buffer)
 {
 	BLASLONG i;
-	BLASLONG j;
 	FLOAT *a_ptr;
 	FLOAT *x_ptr;
 	FLOAT *y_ptr;
@@ -282,8 +281,8 @@ int CNAME(BLASLONG m, BLASLONG n, BLASLONG dummy1, FLOAT alpha, FLOAT *a, BLASLO
 			if ( n2 & 1 )
 			{
 				dgemv_kernel_4x1(NB,a_ptr,x_ptr,ybuffer,&alpha);
-				a_ptr += lda;
-				x_ptr += 1;	
+				/* a_ptr += lda;
+				x_ptr += 1; */
 
 			}
 

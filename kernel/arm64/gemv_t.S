@@ -41,6 +41,9 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define J	x11	/* loop variable */
 #define I	x12	/* loop variable */
 
+#define X_PREFETCH_SIZE	768
+#define A_PREFETCH_SIZE	768
+
 /*******************************************************************************
 * Macro definitions
 *******************************************************************************/
@@ -112,42 +115,54 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	ld1	{v5.4s, v6.4s, v7.4s, v8.4s}, [A_PTR], #64
 	ld1	{v9.4s, v10.4s, v11.4s, v12.4s}, [X_PTR], #64
 	fmla	v1.4s, v5.4s, v9.4s
+	prfm	PLDL1KEEP, [A_PTR, #A_PREFETCH_SIZE]
 	fmla	v2.4s, v6.4s, v10.4s
+	prfm	PLDL1KEEP, [X_PTR, #X_PREFETCH_SIZE]
 	fmla	v3.4s, v7.4s, v11.4s
+	ld1	{v13.4s, v14.4s, v15.4s, v16.4s}, [A_PTR], #64
 	fmla	v4.4s, v8.4s, v12.4s
 
-	ld1	{v13.4s, v14.4s, v15.4s, v16.4s}, [A_PTR], #64
 	ld1	{v17.4s, v18.4s, v19.4s, v20.4s}, [X_PTR], #64
 	fmla	v1.4s, v13.4s, v17.4s
+	prfm	PLDL1KEEP, [A_PTR, #A_PREFETCH_SIZE]
 	fmla	v2.4s, v14.4s, v18.4s
+	prfm	PLDL1KEEP, [X_PTR, #X_PREFETCH_SIZE]
 	fmla	v3.4s, v15.4s, v19.4s
 	fmla	v4.4s, v16.4s, v20.4s
 #else
 	ld1	{v5.2d, v6.2d, v7.2d, v8.2d}, [A_PTR], #64
 	ld1	{v9.2d, v10.2d, v11.2d, v12.2d}, [X_PTR], #64
 	fmla	v1.2d, v5.2d, v9.2d
+	prfm	PLDL1KEEP, [A_PTR, #A_PREFETCH_SIZE]
 	fmla	v2.2d, v6.2d, v10.2d
+	prfm	PLDL1KEEP, [X_PTR, #X_PREFETCH_SIZE]
 	fmla	v3.2d, v7.2d, v11.2d
 	fmla	v4.2d, v8.2d, v12.2d
 
 	ld1	{v13.2d, v14.2d, v15.2d, v16.2d}, [A_PTR], #64
 	ld1	{v17.2d, v18.2d, v19.2d, v20.2d}, [X_PTR], #64
 	fmla	v1.2d, v13.2d, v17.2d
+	prfm	PLDL1KEEP, [A_PTR, #A_PREFETCH_SIZE]
 	fmla	v2.2d, v14.2d, v18.2d
+	prfm	PLDL1KEEP, [X_PTR, #X_PREFETCH_SIZE]
 	fmla	v3.2d, v15.2d, v19.2d
 	fmla	v4.2d, v16.2d, v20.2d
 
 	ld1	{v5.2d, v6.2d, v7.2d, v8.2d}, [A_PTR], #64
 	ld1	{v9.2d, v10.2d, v11.2d, v12.2d}, [X_PTR], #64
 	fmla	v1.2d, v5.2d, v9.2d
+	prfm	PLDL1KEEP, [A_PTR, #A_PREFETCH_SIZE]
 	fmla	v2.2d, v6.2d, v10.2d
+	prfm	PLDL1KEEP, [X_PTR, #X_PREFETCH_SIZE]
 	fmla	v3.2d, v7.2d, v11.2d
 	fmla	v4.2d, v8.2d, v12.2d
 
 	ld1	{v13.2d, v14.2d, v15.2d, v16.2d}, [A_PTR], #64
 	ld1	{v17.2d, v18.2d, v19.2d, v20.2d}, [X_PTR], #64
 	fmla	v1.2d, v13.2d, v17.2d
+	prfm	PLDL1KEEP, [A_PTR, #A_PREFETCH_SIZE]
 	fmla	v2.2d, v14.2d, v18.2d
+	prfm	PLDL1KEEP, [X_PTR, #X_PREFETCH_SIZE]
 	fmla	v3.2d, v15.2d, v19.2d
 	fmla	v4.2d, v16.2d, v20.2d
 #endif
@@ -218,18 +233,18 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	SAVE_REGS
 
 	cmp	N, xzr
-	ble	gemv_t_kernel_L999
+	ble	.Lgemv_t_kernel_L999
 	cmp	M, xzr
-	ble	gemv_t_kernel_L999
+	ble	.Lgemv_t_kernel_L999
 
 	lsl	LDA, LDA, #SHZ
 	lsl	INC_Y, INC_Y, #SHZ
 	mov	J, N
 
 	cmp	INC_X, #1
-	bne	gemv_t_kernel_S_BEGIN
+	bne	.Lgemv_t_kernel_S_BEGIN
 
-gemv_t_kernel_F_LOOP:
+.Lgemv_t_kernel_F_LOOP:
 
 	fmov	TEMP, REG0
 	fmov	TEMP1, REG0
@@ -239,64 +254,64 @@ gemv_t_kernel_F_LOOP:
 	mov	A_PTR, A
 	mov	X_PTR, X
 
-gemv_t_kernel_F32:
+.Lgemv_t_kernel_F32:
 
 	asr	I, M, #5
 	cmp	I, xzr
-	beq	gemv_t_kernel_F4
+	beq	.Lgemv_t_kernel_F4
 
-gemv_t_kernel_F320:
+.Lgemv_t_kernel_F320:
 
 	KERNEL_F32
 
 	subs	I, I, #1
-	bne	gemv_t_kernel_F320
+	bne	.Lgemv_t_kernel_F320
 
 	KERNEL_F32_FINALIZE
 
-gemv_t_kernel_F4:
+.Lgemv_t_kernel_F4:
 	ands	I, M, #31
 	asr	I, I, #2
 	cmp	I, xzr
-	beq	gemv_t_kernel_F1
+	beq	.Lgemv_t_kernel_F1
 
-gemv_t_kernel_F40:
+.Lgemv_t_kernel_F40:
 
 	KERNEL_F4
 
 	subs	I, I, #1
-	bne	gemv_t_kernel_F40
+	bne	.Lgemv_t_kernel_F40
 
-gemv_t_kernel_F1:
+.Lgemv_t_kernel_F1:
 
 	KERNEL_F4_FINALIZE
 
 	ands	I, M, #3
-	ble	gemv_t_kernel_F_END
+	ble	.Lgemv_t_kernel_F_END
 
-gemv_t_kernel_F10:
+.Lgemv_t_kernel_F10:
 
 	KERNEL_F1
 
 	subs	I, I, #1
-	bne	gemv_t_kernel_F10
+	bne	.Lgemv_t_kernel_F10
 
-gemv_t_kernel_F_END:
+.Lgemv_t_kernel_F_END:
 
 	ld1	TMPV1, [Y]
 	add	A, A, LDA
 	subs	J, J, #1
 	fmadd	TMP1, ALPHA, TEMP, TMP1
 	st1	TMPV1, [Y], INC_Y
-	bne	gemv_t_kernel_F_LOOP
+	bne	.Lgemv_t_kernel_F_LOOP
 
-	b	gemv_t_kernel_L999
+	b	.Lgemv_t_kernel_L999
 
-gemv_t_kernel_S_BEGIN:
+.Lgemv_t_kernel_S_BEGIN:
 
 	INIT_S
 
-gemv_t_kernel_S_LOOP:
+.Lgemv_t_kernel_S_LOOP:
 
 	fmov	TEMP, REG0
 	mov	A_PTR, A
@@ -304,9 +319,9 @@ gemv_t_kernel_S_LOOP:
 
 	asr	I, M, #2
 	cmp	I, xzr
-	ble	gemv_t_kernel_S1
+	ble	.Lgemv_t_kernel_S1
 
-gemv_t_kernel_S4:
+.Lgemv_t_kernel_S4:
 
 	KERNEL_S1
 	KERNEL_S1
@@ -314,30 +329,30 @@ gemv_t_kernel_S4:
 	KERNEL_S1
 
 	subs	I, I, #1
-	bne	gemv_t_kernel_S4
+	bne	.Lgemv_t_kernel_S4
 
-gemv_t_kernel_S1:
+.Lgemv_t_kernel_S1:
 
 	ands	I, M, #3
-	ble	gemv_t_kernel_S_END
+	ble	.Lgemv_t_kernel_S_END
 
-gemv_t_kernel_S10:
+.Lgemv_t_kernel_S10:
 
 	KERNEL_S1
 
 	subs	I, I, #1
-	bne	gemv_t_kernel_S10
+	bne	.Lgemv_t_kernel_S10
 
-gemv_t_kernel_S_END:
+.Lgemv_t_kernel_S_END:
 
 	ld1	TMPV1, [Y]
 	add	A, A, LDA
 	subs    J, J, #1
 	fmadd	TMP1, ALPHA, TEMP, TMP1
 	st1	TMPV1, [Y], INC_Y
-        bne     gemv_t_kernel_S_LOOP
+        bne     .Lgemv_t_kernel_S_LOOP
 
-gemv_t_kernel_L999:
+.Lgemv_t_kernel_L999:
 
 	RESTORE_REGS
 

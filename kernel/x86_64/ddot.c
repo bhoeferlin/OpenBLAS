@@ -31,13 +31,13 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #if defined(BULLDOZER) 
 #include "ddot_microk_bulldozer-2.c"
-#elif defined(STEAMROLLER)
+#elif defined(STEAMROLLER)  || defined(EXCAVATOR)
 #include "ddot_microk_steamroller-2.c"
 #elif defined(PILEDRIVER)
 #include "ddot_microk_piledriver-2.c"
 #elif defined(NEHALEM) 
 #include "ddot_microk_nehalem-2.c"
-#elif defined(HASWELL)
+#elif defined(HASWELL) || defined(ZEN)
 #include "ddot_microk_haswell-2.c"
 #elif defined(SANDYBRIDGE)
 #include "ddot_microk_sandy-2.c"

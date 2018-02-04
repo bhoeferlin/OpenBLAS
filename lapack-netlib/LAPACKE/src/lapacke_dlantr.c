@@ -28,7 +28,7 @@
 *****************************************************************************
 * Contents: Native high-level C interface to LAPACK function dlantr
 * Author: Intel Corporation
-* Generated November 2015
+* Generated June 2016
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -38,21 +38,22 @@ double LAPACKE_dlantr( int matrix_layout, char norm, char uplo, char diag,
                            lapack_int lda )
 {
     lapack_int info = 0;
-	double res = 0.;
+    double res = 0.;
     double* work = NULL;
     if( matrix_layout != LAPACK_COL_MAJOR && matrix_layout != LAPACK_ROW_MAJOR ) {
         LAPACKE_xerbla( "LAPACKE_dlantr", -1 );
         return -1;
     }
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    /* Optionally check input matrices for NaNs */
-    if( LAPACKE_dtr_nancheck( matrix_layout, uplo, diag, MIN(m,n), a, lda ) ) {
-        return -7;
+    if( LAPACKE_get_nancheck() ) {
+        /* Optionally check input matrices for NaNs */
+        if( LAPACKE_dtr_nancheck( matrix_layout, uplo, diag, MIN(m,n), a, lda ) ) {
+            return -7;
+        }
     }
 #endif
     /* Allocate memory for working array(s) */
-    if( LAPACKE_lsame( norm, 'i' ) || LAPACKE_lsame( norm, '1' ) ||
-        LAPACKE_lsame( norm, 'O' ) ) {
+    if( LAPACKE_lsame( norm, 'i' ) ) {
         work = (double*)LAPACKE_malloc( sizeof(double) * MAX(1,MAX(m,n)) );
         if( work == NULL ) {
             info = LAPACK_WORK_MEMORY_ERROR;
@@ -63,8 +64,7 @@ double LAPACKE_dlantr( int matrix_layout, char norm, char uplo, char diag,
     res = LAPACKE_dlantr_work( matrix_layout, norm, uplo, diag, m, n, a, lda,
                                 work );
     /* Release memory and exit */
-    if( LAPACKE_lsame( norm, 'i' ) || LAPACKE_lsame( norm, '1' ) ||
-        LAPACKE_lsame( norm, 'O' ) ) {
+    if( LAPACKE_lsame( norm, 'i' ) ) {
         LAPACKE_free( work );
     }
 exit_level_0:

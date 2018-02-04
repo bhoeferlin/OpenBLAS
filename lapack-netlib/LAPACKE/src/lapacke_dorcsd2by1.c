@@ -28,7 +28,7 @@
 *****************************************************************************
 * Contents: Native high-level C interface to LAPACK function dorcsd2by1
 * Author: Intel Corporation
-* Generated November, 2011
+* Generated November 2017
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -50,17 +50,18 @@ lapack_int LAPACKE_dorcsd2by1( int matrix_layout, char jobu1, char jobu2,
         return -1;
     }
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    /* Optionally check input matrices for NaNs */
-    nrows_x11 =  p ;
-    nrows_x21 =  m-p ;
-    if( LAPACKE_dge_nancheck( matrix_layout, nrows_x11, q, x11, ldx11 ) ) {
-        return -8;
+    if( LAPACKE_get_nancheck() ) {
+        /* Optionally check input matrices for NaNs */
+        nrows_x11 = p;
+        nrows_x21 = m-p;
+        if( LAPACKE_dge_nancheck( matrix_layout, nrows_x11, q, x11, ldx11 ) ) {
+            return -8;
+        }
+ 
+        if( LAPACKE_dge_nancheck( matrix_layout, nrows_x21, q, x21, ldx21 ) ) {
+            return -9;
+        }
     }
-
-    if( LAPACKE_dge_nancheck( matrix_layout, nrows_x21, q, x21, ldx21 ) ) {
-        return -9;
-    }
-
 #endif
     /* Allocate memory for working array(s) */
     iwork = (lapack_int*)LAPACKE_malloc( sizeof(lapack_int) * MAX(1,m-MIN(MIN(p,m-p),MIN(q,m-q))) );
@@ -69,7 +70,7 @@ lapack_int LAPACKE_dorcsd2by1( int matrix_layout, char jobu1, char jobu2,
         goto exit_level_0;
     }
     /* Query optimal working array(s) size */
-    info = LAPACKE_dorcsd2by1_work( matrix_layout, jobu1, jobu2, jobv1t, m, p, q, 
+    info = LAPACKE_dorcsd2by1_work( matrix_layout, jobu1, jobu2, jobv1t, m, p, q,
                                 x11, ldx11, x21, ldx21, theta, u1, ldu1, u2,
                                 ldu2, v1t, ldv1t, &work_query,
                                 lwork, iwork );
@@ -84,7 +85,7 @@ lapack_int LAPACKE_dorcsd2by1( int matrix_layout, char jobu1, char jobu2,
         goto exit_level_1;
     }
     /* Call middle-level interface */
-    info = LAPACKE_dorcsd2by1_work( matrix_layout, jobu1, jobu2, jobv1t, m, p, q, 
+    info = LAPACKE_dorcsd2by1_work( matrix_layout, jobu1, jobu2, jobv1t, m, p, q,
                                 x11, ldx11, x21, ldx21, theta, u1, ldu1, u2,
                                 ldu2, v1t, ldv1t, work, lwork, iwork );
     /* Release memory and exit */

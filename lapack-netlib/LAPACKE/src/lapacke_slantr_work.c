@@ -28,7 +28,7 @@
 *****************************************************************************
 * Contents: Native middle-level C interface to LAPACK function slantr
 * Author: Intel Corporation
-* Generated November 2015
+* Generated June 2016
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -41,7 +41,7 @@ float LAPACKE_slantr_work( int matrix_layout, char norm, char uplo,
     float res = 0.;
     if( matrix_layout == LAPACK_COL_MAJOR ) {
         /* Call LAPACK function and adjust info */
-        LAPACK_slantr( &norm, &uplo, &diag, &m, &n, a, &lda, work );
+        res = LAPACK_slantr( &norm, &uplo, &diag, &m, &n, a, &lda, work );
         if( info < 0 ) {
             info = info - 1;
         }

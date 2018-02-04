@@ -148,21 +148,25 @@ OPENBLAS_COMPLEX_FLOAT NAME(                        blasint *N, FLOAT *x, blasin
 #else
 
 #ifdef FORCE_USE_STACK
-void           CNAME(blasint n, FLOAT *x, blasint incx, FLOAT *y, blasint incy, OPENBLAS_COMPLEX_FLOAT *result){
+void           CNAME(blasint n, void *vx, blasint incx, void *vy, blasint incy, void* vresult){
+OPENBLAS_COMPLEX_FLOAT *result= (OPENBLAS_COMPLEX_FLOAT*)vresult;
 #else
-OPENBLAS_COMPLEX_FLOAT CNAME(blasint n, FLOAT *x, blasint incx, FLOAT *y, blasint incy){
+OPENBLAS_COMPLEX_FLOAT CNAME(blasint n, void *vx, blasint incx, void *vy, blasint incy){
 
   OPENBLAS_COMPLEX_FLOAT ret;
   OPENBLAS_COMPLEX_FLOAT zero=OPENBLAS_MAKE_COMPLEX_FLOAT(0.0, 0.0);
 #endif
+  FLOAT *x = (FLOAT*) vx;
+  FLOAT *y = (FLOAT*) vy;
 
   PRINT_DEBUG_CNAME;
 
   if (n <= 0) {
 #ifdef FORCE_USE_STACK
-    //*result = OPENBLAS_MAKE_COMPLEX_FLOAT(0.0, 0.0);
-	CREAL(*result) = 0.0;
-	CIMAG(*result) = 0.0;
+    OPENBLAS_COMPLEX_FLOAT zero=OPENBLAS_MAKE_COMPLEX_FLOAT(0.0, 0.0);
+    *result = zero;
+//	CREAL(*result) = 0.0;
+//	CIMAG(*result) = 0.0;
     return;
 #else
     return zero;

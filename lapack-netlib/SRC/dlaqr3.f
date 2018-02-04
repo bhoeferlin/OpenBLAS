@@ -2,18 +2,18 @@
 *
 *  =========== DOCUMENTATION ===========
 *
-* Online html documentation available at 
-*            http://www.netlib.org/lapack/explore-html/ 
+* Online html documentation available at
+*            http://www.netlib.org/lapack/explore-html/
 *
 *> \htmlonly
-*> Download DLAQR3 + dependencies 
-*> <a href="http://www.netlib.org/cgi-bin/netlibfiles.tgz?format=tgz&filename=/lapack/lapack_routine/dlaqr3.f"> 
-*> [TGZ]</a> 
-*> <a href="http://www.netlib.org/cgi-bin/netlibfiles.zip?format=zip&filename=/lapack/lapack_routine/dlaqr3.f"> 
-*> [ZIP]</a> 
-*> <a href="http://www.netlib.org/cgi-bin/netlibfiles.txt?format=txt&filename=/lapack/lapack_routine/dlaqr3.f"> 
+*> Download DLAQR3 + dependencies
+*> <a href="http://www.netlib.org/cgi-bin/netlibfiles.tgz?format=tgz&filename=/lapack/lapack_routine/dlaqr3.f">
+*> [TGZ]</a>
+*> <a href="http://www.netlib.org/cgi-bin/netlibfiles.zip?format=zip&filename=/lapack/lapack_routine/dlaqr3.f">
+*> [ZIP]</a>
+*> <a href="http://www.netlib.org/cgi-bin/netlibfiles.txt?format=txt&filename=/lapack/lapack_routine/dlaqr3.f">
 *> [TXT]</a>
-*> \endhtmlonly 
+*> \endhtmlonly
 *
 *  Definition:
 *  ===========
@@ -21,7 +21,7 @@
 *       SUBROUTINE DLAQR3( WANTT, WANTZ, N, KTOP, KBOT, NW, H, LDH, ILOZ,
 *                          IHIZ, Z, LDZ, NS, ND, SR, SI, V, LDV, NH, T,
 *                          LDT, NV, WV, LDWV, WORK, LWORK )
-* 
+*
 *       .. Scalar Arguments ..
 *       INTEGER            IHIZ, ILOZ, KBOT, KTOP, LDH, LDT, LDV, LDWV,
 *      $                   LDZ, LWORK, N, ND, NH, NS, NV, NW
@@ -32,7 +32,7 @@
 *      $                   V( LDV, * ), WORK( * ), WV( LDWV, * ),
 *      $                   Z( LDZ, * )
 *       ..
-*  
+*
 *
 *> \par Purpose:
 *  =============
@@ -116,7 +116,7 @@
 *>
 *> \param[in] LDH
 *> \verbatim
-*>          LDH is integer
+*>          LDH is INTEGER
 *>          Leading dimension of H just as declared in the calling
 *>          subroutine.  N .LE. LDH
 *> \endverbatim
@@ -138,20 +138,20 @@
 *>          Z is DOUBLE PRECISION array, dimension (LDZ,N)
 *>          IF WANTZ is .TRUE., then on output, the orthogonal
 *>          similarity transformation mentioned above has been
-*>          accumulated into Z(ILOZ:IHIZ,ILO:IHI) from the right.
+*>          accumulated into Z(ILOZ:IHIZ,ILOZ:IHIZ) from the right.
 *>          If WANTZ is .FALSE., then Z is unreferenced.
 *> \endverbatim
 *>
 *> \param[in] LDZ
 *> \verbatim
-*>          LDZ is integer
+*>          LDZ is INTEGER
 *>          The leading dimension of Z just as declared in the
 *>          calling subroutine.  1 .LE. LDZ.
 *> \endverbatim
 *>
 *> \param[out] NS
 *> \verbatim
-*>          NS is integer
+*>          NS is INTEGER
 *>          The number of unconverged (ie approximate) eigenvalues
 *>          returned in SR and SI that may be used as shifts by the
 *>          calling subroutine.
@@ -159,7 +159,7 @@
 *>
 *> \param[out] ND
 *> \verbatim
-*>          ND is integer
+*>          ND is INTEGER
 *>          The number of converged eigenvalues uncovered by this
 *>          subroutine.
 *> \endverbatim
@@ -189,14 +189,14 @@
 *>
 *> \param[in] LDV
 *> \verbatim
-*>          LDV is integer scalar
+*>          LDV is INTEGER
 *>          The leading dimension of V just as declared in the
 *>          calling subroutine.  NW .LE. LDV
 *> \endverbatim
 *>
 *> \param[in] NH
 *> \verbatim
-*>          NH is integer scalar
+*>          NH is INTEGER
 *>          The number of columns of T.  NH.GE.NW.
 *> \endverbatim
 *>
@@ -207,14 +207,14 @@
 *>
 *> \param[in] LDT
 *> \verbatim
-*>          LDT is integer
+*>          LDT is INTEGER
 *>          The leading dimension of T just as declared in the
 *>          calling subroutine.  NW .LE. LDT
 *> \endverbatim
 *>
 *> \param[in] NV
 *> \verbatim
-*>          NV is integer
+*>          NV is INTEGER
 *>          The number of rows of work array WV available for
 *>          workspace.  NV.GE.NW.
 *> \endverbatim
@@ -226,7 +226,7 @@
 *>
 *> \param[in] LDWV
 *> \verbatim
-*>          LDWV is integer
+*>          LDWV is INTEGER
 *>          The leading dimension of W just as declared in the
 *>          calling subroutine.  NW .LE. LDV
 *> \endverbatim
@@ -240,7 +240,7 @@
 *>
 *> \param[in] LWORK
 *> \verbatim
-*>          LWORK is integer
+*>          LWORK is INTEGER
 *>          The dimension of the work array WORK.  LWORK = 2*NW
 *>          suffices, but greater efficiency may result from larger
 *>          values of LWORK.
@@ -255,12 +255,12 @@
 *  Authors:
 *  ========
 *
-*> \author Univ. of Tennessee 
-*> \author Univ. of California Berkeley 
-*> \author Univ. of Colorado Denver 
-*> \author NAG Ltd. 
+*> \author Univ. of Tennessee
+*> \author Univ. of California Berkeley
+*> \author Univ. of Colorado Denver
+*> \author NAG Ltd.
 *
-*> \date September 2012
+*> \date June 2016
 *
 *> \ingroup doubleOTHERauxiliary
 *
@@ -275,10 +275,10 @@
      $                   IHIZ, Z, LDZ, NS, ND, SR, SI, V, LDV, NH, T,
      $                   LDT, NV, WV, LDWV, WORK, LWORK )
 *
-*  -- LAPACK auxiliary routine (version 3.4.2) --
+*  -- LAPACK auxiliary routine (version 3.7.1) --
 *  -- LAPACK is a software package provided by Univ. of Tennessee,    --
 *  -- Univ. of California Berkeley, Univ. of Colorado Denver and NAG Ltd..--
-*     September 2012
+*     June 2016
 *
 *     .. Scalar Arguments ..
       INTEGER            IHIZ, ILOZ, KBOT, KTOP, LDH, LDT, LDV, LDWV,

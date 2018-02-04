@@ -76,7 +76,7 @@ static void cgemv_kernel_4x4( BLASLONG n, FLOAT **ap, FLOAT *x, FLOAT *y, FLOAT 
 	"cmpq           $0, %1                         \n\t"
         "je             3f                      \n\t"
 
-	".align 16				        \n\t"
+	//	".align 16				        \n\t"
 	"1:				        \n\t"
         "prefetcht0      192(%4,%0,4)                   \n\t"
 	"vmovups	(%4,%0,4), %%ymm4	        \n\t" // 4 complex values from a0
@@ -230,9 +230,9 @@ static void cgemv_kernel_4x4( BLASLONG n, FLOAT **ap, FLOAT *x, FLOAT *y, FLOAT 
 	"vzeroupper			 \n\t"
 
 	:
-        : 
-          "r" (i),	// 0	
-	  "r" (n),  	// 1
+          "+r" (i),	// 0	
+	  "+r" (n)  	// 1
+	:
           "r" (x),      // 2
           "r" (y),      // 3
           "r" (ap[0]),  // 4
@@ -292,7 +292,7 @@ static void cgemv_kernel_4x2( BLASLONG n, FLOAT **ap, FLOAT *x, FLOAT *y, FLOAT 
 	"cmpq           $0, %1                         \n\t"
         "je             3f                      \n\t"
 
-	".align 16				        \n\t"
+	//	".align 16				        \n\t"
 	"1:				        \n\t"
         "prefetcht0      192(%4,%0,4)                   \n\t"
 	"vmovups	(%4,%0,4), %%ymm4	        \n\t" // 4 complex values from a0
@@ -391,9 +391,9 @@ static void cgemv_kernel_4x2( BLASLONG n, FLOAT **ap, FLOAT *x, FLOAT *y, FLOAT 
 	"vzeroupper			 \n\t"
 
 	:
-        : 
-          "r" (i),	// 0	
-	  "r" (n),  	// 1
+          "+r" (i),	// 0	
+	  "+r" (n)  	// 1
+	:
           "r" (x),      // 2
           "r" (y),      // 3
           "r" (ap[0]),  // 4
@@ -446,7 +446,7 @@ static void cgemv_kernel_4x1( BLASLONG n, FLOAT *ap, FLOAT *x, FLOAT *y, FLOAT *
 	"cmpq           $0, %1                         \n\t"
         "je             3f                      \n\t"
 
-	".align 16				        \n\t"
+	//	".align 16				        \n\t"
 	"1:				        \n\t"
         "prefetcht0      192(%4,%0,4)                   \n\t"
 	"vmovups	(%4,%0,4), %%ymm4	        \n\t" // 4 complex values from a0
@@ -519,9 +519,9 @@ static void cgemv_kernel_4x1( BLASLONG n, FLOAT *ap, FLOAT *x, FLOAT *y, FLOAT *
 	"vzeroupper			 \n\t"
 
 	:
-        : 
-          "r" (i),	// 0	
-	  "r" (n),  	// 1
+          "+r" (i),	// 0	
+	  "+r" (n)  	// 1
+	:
           "r" (x),      // 2
           "r" (y),      // 3
           "r" (ap),     // 4

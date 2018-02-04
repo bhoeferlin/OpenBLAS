@@ -155,7 +155,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifdef DYNAMIC_ARCH
 gotoblas_t *gotoblas = NULL;
 #endif
-
 extern void openblas_warning(int verbose, const char * msg);
 
 #ifndef SMP
@@ -169,14 +168,52 @@ void goto_set_num_threads(int num_threads) {};
 
 #else
 
-#if defined(OS_LINUX) || defined(OS_SUNOS)
+#if defined(OS_LINUX) || defined(OS_SUNOS) || defined(OS_NETBSD)
 #ifndef NO_AFFINITY
 int get_num_procs(void);
 #else
 int get_num_procs(void) {
   static int nums = 0;
-  if (!nums) nums = sysconf(_SC_NPROCESSORS_ONLN);
+cpu_set_t *cpusetp;
+size_t size;
+int ret;
+// int i,n;
+
+  if (!nums) nums = sysconf(_SC_NPROCESSORS_CONF);
+#if !defined(OS_LINUX)
+     return nums;
+#endif
+
+#if !defined(__GLIBC_PREREQ)
+   return nums;
+#else
+ #if !__GLIBC_PREREQ(2, 3)
+   return nums;
+ #endif
+
+ #if !__GLIBC_PREREQ(2, 7)
+  ret = sched_getaffinity(0,sizeof(cpu_set_t), cpusetp);
+  if (ret!=0) return nums;
+  n=0;
+  #if !__GLIBC_PREREQ(2, 6)
+  for (i=0;i<nums;i++)
+     if (CPU_ISSET(i,cpusetp)) n++;
+  nums=n;
+  #else
+  nums = CPU_COUNT(sizeof(cpu_set_t),cpusetp);
+  #endif
   return nums;
+ #else
+  cpusetp = CPU_ALLOC(nums);
+  if (cpusetp == NULL) return nums;
+  size = CPU_ALLOC_SIZE(nums);
+  ret = sched_getaffinity(0,size,cpusetp);
+  if (ret!=0) return nums;
+  nums = CPU_COUNT_S(size,cpusetp);
+  CPU_FREE(cpusetp);
+  return nums;
+ #endif
+#endif
 }
 #endif
 #endif
@@ -184,7 +221,7 @@ int get_num_procs(void) {
 #ifdef OS_ANDROID
 int get_num_procs(void) {
   static int nums = 0;
-  if (!nums) nums = sysconf(_SC_NPROCESSORS_ONLN);
+  if (!nums) nums = sysconf(_SC_NPROCESSORS_CONF);
   return nums;
 }
 #endif
@@ -294,8 +331,11 @@ void openblas_fork_handler()
 #endif
 }
 
+extern int openblas_num_threads_env();
+extern int openblas_goto_num_threads_env();
+extern int openblas_omp_num_threads_env();
+
 int blas_get_cpu_number(void){
-  env_var_t p;
 #if defined(OS_LINUX) || defined(OS_WINDOWS) || defined(OS_FREEBSD) || defined(OS_DARWIN) || defined(OS_ANDROID)
   int max_num;
 #endif
@@ -308,20 +348,20 @@ int blas_get_cpu_number(void){
   max_num = get_num_procs();
 #endif
 
-  blas_goto_num = 0;
+  // blas_goto_num = 0;
 #ifndef USE_OPENMP
-  if (readenv(p,"OPENBLAS_NUM_THREADS")) blas_goto_num = atoi(p);
+  blas_goto_num=openblas_num_threads_env();
   if (blas_goto_num < 0) blas_goto_num = 0;
 
   if (blas_goto_num == 0) {
-		if (readenv(p,"GOTO_NUM_THREADS")) blas_goto_num = atoi(p);
-		if (blas_goto_num < 0) blas_goto_num = 0;
+    blas_goto_num=openblas_goto_num_threads_env();
+    if (blas_goto_num < 0) blas_goto_num = 0;
   }
 
 #endif
 
-  blas_omp_num = 0;
-  if (readenv(p,"OMP_NUM_THREADS")) blas_omp_num = atoi(p);
+  // blas_omp_num = 0;
+  blas_omp_num=openblas_omp_num_threads_env();
   if (blas_omp_num < 0) blas_omp_num = 0;
 
   if (blas_goto_num > 0) blas_num_threads = blas_goto_num;
@@ -378,6 +418,16 @@ static int release_pos = 0;
 static int hot_alloc = 0;
 #endif
 
+/* Global lock for memory allocation */
+
+#if   defined(USE_PTHREAD_LOCK)
+static pthread_mutex_t    alloc_lock = PTHREAD_MUTEX_INITIALIZER;
+#elif defined(USE_PTHREAD_SPINLOCK)
+static pthread_spinlock_t alloc_lock = 0;
+#else
+static BLASULONG  alloc_lock = 0UL;
+#endif
+
 #ifdef ALLOC_MMAP
 
 static void alloc_mmap_free(struct release_t *release){
@@ -386,6 +436,8 @@ static void alloc_mmap_free(struct release_t *release){
     printf("OpenBLAS : munmap failed\n");
   }
 }
+
+
 
 #ifdef NO_WARMUP
 
@@ -403,9 +455,11 @@ static void *alloc_mmap(void *address){
   }
 
   if (map_address != (void *)-1) {
+    LOCK_COMMAND(&alloc_lock);
     release_info[release_pos].address = map_address;
     release_info[release_pos].func    = alloc_mmap_free;
     release_pos ++;
+    UNLOCK_COMMAND(&alloc_lock);
   }
 
 #ifdef OS_LINUX
@@ -547,12 +601,14 @@ static void *alloc_mmap(void *address){
 #if defined(OS_LINUX) && !defined(NO_WARMUP)
   }
 #endif
+  LOCK_COMMAND(&alloc_lock);
 
   if (map_address != (void *)-1) {
     release_info[release_pos].address = map_address;
     release_info[release_pos].func    = alloc_mmap_free;
     release_pos ++;
   }
+  UNLOCK_COMMAND(&alloc_lock);
 
   return map_address;
 }
@@ -886,15 +942,6 @@ static void *alloc_hugetlbfile(void *address){
 }
 #endif
 
-/* Global lock for memory allocation */
-
-#if   defined(USE_PTHREAD_LOCK)
-static pthread_mutex_t    alloc_lock = PTHREAD_MUTEX_INITIALIZER;
-#elif defined(USE_PTHREAD_SPINLOCK)
-static pthread_spinlock_t alloc_lock = 0;
-#else
-static BLASULONG  alloc_lock = 0UL;
-#endif
 
 #ifdef SEEK_ADDRESS
 static BLASULONG base_address      = 0UL;
@@ -960,45 +1007,41 @@ void *blas_memory_alloc(int procpos){
     NULL,
   };
   void *(**func)(void *address);
+  LOCK_COMMAND(&alloc_lock);
 
   if (!memory_initialized) {
 
-    LOCK_COMMAND(&alloc_lock);
-
-    if (!memory_initialized) {
-
 #if defined(WHEREAMI) && !defined(USE_OPENMP)
-      for (position = 0; position < NUM_BUFFERS; position ++){
-	memory[position].addr   = (void *)0;
-	memory[position].pos    = -1;
-	memory[position].used   = 0;
-	memory[position].lock   = 0;
-      }
+    for (position = 0; position < NUM_BUFFERS; position ++){
+      memory[position].addr   = (void *)0;
+      memory[position].pos    = -1;
+      memory[position].used   = 0;
+      memory[position].lock   = 0;
+    }
 #endif
 
 #ifdef DYNAMIC_ARCH
-      gotoblas_dynamic_init();
+    gotoblas_dynamic_init();
 #endif
 
 #if defined(SMP) && defined(OS_LINUX) && !defined(NO_AFFINITY)
-      gotoblas_affinity_init();
+    gotoblas_affinity_init();
 #endif
 
 #ifdef SMP
-      if (!blas_num_threads) blas_cpu_number = blas_get_cpu_number();
+    if (!blas_num_threads) blas_cpu_number = blas_get_cpu_number();
 #endif
 
-#if defined(ARCH_X86) || defined(ARCH_X86_64) || defined(ARCH_IA64) || defined(ARCH_MIPS64)
+#if defined(ARCH_X86) || defined(ARCH_X86_64) || defined(ARCH_IA64) || defined(ARCH_MIPS64) || defined(ARCH_ARM64)
 #ifndef DYNAMIC_ARCH
-      blas_set_parameter();
+    blas_set_parameter();
 #endif
 #endif
 
-      memory_initialized = 1;
-    }
+    memory_initialized = 1;
 
-    UNLOCK_COMMAND(&alloc_lock);
   }
+  UNLOCK_COMMAND(&alloc_lock);
 
 #ifdef DEBUG
   printf("Alloc Start ...\n");
@@ -1009,16 +1052,17 @@ void *blas_memory_alloc(int procpos){
   mypos = WhereAmI();
 
   position = mypos;
-  while (position > NUM_BUFFERS) position >>= 1;
+  while (position >= NUM_BUFFERS) position >>= 1;
 
   do {
     if (!memory[position].used && (memory[position].pos == mypos)) {
-
-      blas_lock(&memory[position].lock);
+      LOCK_COMMAND(&alloc_lock);
+/*      blas_lock(&memory[position].lock);*/
 
       if (!memory[position].used) goto allocation;
 
-      blas_unlock(&memory[position].lock);
+      UNLOCK_COMMAND(&alloc_lock);
+/*      blas_unlock(&memory[position].lock);*/
     }
 
     position ++;
@@ -1031,14 +1075,15 @@ void *blas_memory_alloc(int procpos){
   position = 0;
 
   do {
-    if (!memory[position].used) {
-
-      blas_lock(&memory[position].lock);
+/*    if (!memory[position].used) { */
+      LOCK_COMMAND(&alloc_lock);
+/*      blas_lock(&memory[position].lock);*/
 
       if (!memory[position].used) goto allocation;
-
-      blas_unlock(&memory[position].lock);
-    }
+      
+      UNLOCK_COMMAND(&alloc_lock);
+/*      blas_unlock(&memory[position].lock);*/
+/*    } */
 
     position ++;
 
@@ -1054,7 +1099,8 @@ void *blas_memory_alloc(int procpos){
 
   memory[position].used = 1;
 
-  blas_unlock(&memory[position].lock);
+  UNLOCK_COMMAND(&alloc_lock);
+/*  blas_unlock(&memory[position].lock);*/
 
   if (!memory[position].addr) {
     do {
@@ -1100,7 +1146,9 @@ void *blas_memory_alloc(int procpos){
 
     } while ((BLASLONG)map_address == -1);
 
+    LOCK_COMMAND(&alloc_lock);
     memory[position].addr = map_address;
+    UNLOCK_COMMAND(&alloc_lock);
 
 #ifdef DEBUG
     printf("  Mapping Succeeded. %p(%d)\n", (void *)memory[position].addr, position);
@@ -1154,9 +1202,10 @@ void blas_memory_free(void *free_area){
 #endif
 
   position = 0;
+  LOCK_COMMAND(&alloc_lock);
 
-  while ((memory[position].addr != free_area)
-	 && (position < NUM_BUFFERS)) position++;
+  while ((position < NUM_BUFFERS) && (memory[position].addr != free_area))
+    position++;
 
   if (memory[position].addr != free_area) goto error;
 
@@ -1168,6 +1217,7 @@ void blas_memory_free(void *free_area){
   WMB;
 
   memory[position].used = 0;
+  UNLOCK_COMMAND(&alloc_lock);
 
 #ifdef DEBUG
   printf("Unmap Succeeded.\n\n");
@@ -1182,6 +1232,7 @@ void blas_memory_free(void *free_area){
   for (position = 0; position < NUM_BUFFERS; position++)
     printf("%4ld  %p : %d\n", position, memory[position].addr, memory[position].used);
 #endif
+  UNLOCK_COMMAND(&alloc_lock);
 
   return;
 }
@@ -1340,6 +1391,7 @@ static void gotoblas_memory_init(void) {
 /* Initialization for all function; this function should be called before main */
 
 static int gotoblas_initialized = 0;
+extern void openblas_read_env();
 
 void CONSTRUCTOR gotoblas_init(void) {
 
@@ -1348,6 +1400,8 @@ void CONSTRUCTOR gotoblas_init(void) {
 #ifdef SMP
   openblas_fork_handler();
 #endif
+
+  openblas_read_env();
 
 #ifdef PROFILE
    moncontrol (0);
@@ -1365,7 +1419,8 @@ void CONSTRUCTOR gotoblas_init(void) {
    gotoblas_memory_init();
 #endif
 
-#if defined(OS_LINUX)
+//#if defined(OS_LINUX)
+#if 0
    struct rlimit curlimit;
    if ( getrlimit(RLIMIT_STACK, &curlimit ) == 0 )
    {
@@ -1445,6 +1500,49 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
   }
   return TRUE;
 }
+
+/*
+  This is to allow static linking.
+  Code adapted from Google performance tools:
+  https://gperftools.googlecode.com/git-history/perftools-1.0/src/windows/port.cc
+  Reference:
+  https://sourceware.org/ml/pthreads-win32/2008/msg00028.html
+  http://ci.boost.org/svn-trac/browser/trunk/libs/thread/src/win32/tss_pe.cpp
+*/
+static int on_process_term(void)
+{
+	gotoblas_quit();
+	return 0;
+}
+#ifdef _WIN64
+#pragma comment(linker, "/INCLUDE:_tls_used")
+#else
+#pragma comment(linker, "/INCLUDE:__tls_used")
+#endif
+
+#ifdef _WIN64
+#pragma const_seg(".CRT$XLB")
+#else
+#pragma data_seg(".CRT$XLB")
+#endif
+static void (APIENTRY *dll_callback)(HINSTANCE h, DWORD ul_reason_for_call, PVOID pv) = DllMain;
+#ifdef _WIN64
+#pragma const_seg()
+#else
+#pragma data_seg()
+#endif
+
+#ifdef _WIN64
+#pragma const_seg(".CRT$XTU")
+#else
+#pragma data_seg(".CRT$XTU")
+#endif
+static int(*p_process_term)(void) = on_process_term;
+#ifdef _WIN64
+#pragma const_seg()
+#else
+#pragma data_seg()
+#endif
 #endif
 
 #if (defined(C_PGI) || (!defined(C_SUN) && defined(F_INTERFACE_SUN))) && (defined(ARCH_X86) || defined(ARCH_X86_64))

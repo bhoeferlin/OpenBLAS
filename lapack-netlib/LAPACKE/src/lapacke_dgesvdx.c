@@ -28,15 +28,15 @@
 *****************************************************************************
 * Contents: Native high-level C interface to LAPACK function dgesvdx
 * Author: Intel Corporation
-* Generated November, 2011
+* Generated June 2016
 *****************************************************************************/
 
 #include "lapacke_utils.h"
 
 lapack_int LAPACKE_dgesvdx( int matrix_layout, char jobu, char jobvt, char range,
                            lapack_int m, lapack_int n, double* a,
-                           lapack_int lda, lapack_int vl, lapack_int vu,
-                           lapack_int il, lapack_int iu, lapack_int ns,
+                           lapack_int lda, double vl, double vu,
+                           lapack_int il, lapack_int iu, lapack_int* ns,
                            double* s, double* u, lapack_int ldu,
                            double* vt, lapack_int ldvt,
                            lapack_int* superb )
@@ -52,14 +52,16 @@ lapack_int LAPACKE_dgesvdx( int matrix_layout, char jobu, char jobvt, char range
         return -1;
     }
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    /* Optionally check input matrices for NaNs */
-    if( LAPACKE_dge_nancheck( matrix_layout, m, n, a, lda ) ) {
-        return -6;
+    if( LAPACKE_get_nancheck() ) {
+        /* Optionally check input matrices for NaNs */
+        if( LAPACKE_dge_nancheck( matrix_layout, m, n, a, lda ) ) {
+            return -6;
+        }
     }
 #endif
     /* Query optimal working array(s) size */
     info = LAPACKE_dgesvdx_work( matrix_layout, jobu, jobvt, range,
-    							 m, n, a, lda, vl, vu, il, iu, ns, s, u,
+                                 m, n, a, lda, vl, vu, il, iu, ns, s, u,
                                  ldu, vt, ldvt, &work_query, lwork, iwork );
     if( info != 0 ) {
         goto exit_level_0;
@@ -71,15 +73,15 @@ lapack_int LAPACKE_dgesvdx( int matrix_layout, char jobu, char jobvt, char range
         info = LAPACK_WORK_MEMORY_ERROR;
         goto exit_level_0;
     }
-    iwork = (lapack_int*)LAPACKE_malloc( sizeof(lapack_int) * (12*MIN(m,n)) );
+    iwork = (lapack_int*)LAPACKE_malloc( sizeof(lapack_int) * MAX(1,(12*MIN(m,n))) );
     if( iwork == NULL ) {
         info = LAPACK_WORK_MEMORY_ERROR;
         goto exit_level_1;
     }
     /* Call middle-level interface */
     info = LAPACKE_dgesvdx_work( matrix_layout, jobu, jobvt,  range,
-    							 m, n, a, lda, vl, vu, il, iu, ns, s, u,
-                                ldu, vt, ldvt, work, lwork, iwork );
+                                 m, n, a, lda, vl, vu, il, iu, ns, s, u,
+                                 ldu, vt, ldvt, work, lwork, iwork );
     /* Backup significant data from working array(s) */
     for( i=0; i<12*MIN(m,n)-1; i++ ) {
         superb[i] = iwork[i+1];

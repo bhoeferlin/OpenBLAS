@@ -251,11 +251,11 @@ int CNAME(blas_arg_t *args, BLASLONG *range_m, BLASLONG *range_n,
   if ((k == 0) || (alpha == NULL)) return 0;
 
 #if !defined(XDOUBLE) || !defined(QUAD_PRECISION)
-  if ((alpha[0] == ZERO)
+  if ( alpha[0] == ZERO
 #ifdef COMPLEX
-      && (alpha[1] == ZERO)
+      && alpha[1] == ZERO
 #endif
-      ) return 0;
+	 ) return 0; 
 #else
   if (((alpha[0].x[0] | alpha[0].x[1]
 #ifdef COMPLEX
@@ -293,13 +293,13 @@ int CNAME(blas_arg_t *args, BLASLONG *range_m, BLASLONG *range_n,
       min_l = k - ls;
 
       if (min_l >= GEMM_Q * 2) {
-	gemm_p = GEMM_P;
+	// gemm_p = GEMM_P;
 	min_l  = GEMM_Q;
       } else {
 	if (min_l > GEMM_Q) {
-	  min_l = (min_l / 2 + GEMM_UNROLL_M - 1) & ~(GEMM_UNROLL_M - 1);
+	  min_l = ((min_l / 2 + GEMM_UNROLL_M - 1)/GEMM_UNROLL_M) * GEMM_UNROLL_M;
 	}
-	gemm_p = ((l2size / min_l + GEMM_UNROLL_M - 1) & ~(GEMM_UNROLL_M - 1));
+	gemm_p = ((l2size / min_l + GEMM_UNROLL_M - 1)/GEMM_UNROLL_M) * GEMM_UNROLL_M;
 	while (gemm_p * min_l > l2size) gemm_p -= GEMM_UNROLL_M;
       }
 
@@ -311,7 +311,7 @@ int CNAME(blas_arg_t *args, BLASLONG *range_m, BLASLONG *range_n,
 	min_i = GEMM_P;
       } else {
 	if (min_i > GEMM_P) {
-	  min_i = (min_i / 2 + GEMM_UNROLL_M - 1) & ~(GEMM_UNROLL_M - 1);
+	  min_i = ((min_i / 2 + GEMM_UNROLL_M - 1)/GEMM_UNROLL_M) * GEMM_UNROLL_M;
 	} else {
 	  l1stride = 0;
 	}
@@ -369,7 +369,7 @@ int CNAME(blas_arg_t *args, BLASLONG *range_m, BLASLONG *range_n,
 	  min_i = GEMM_P;
 	} else
 	  if (min_i > GEMM_P) {
-	    min_i = (min_i / 2 + GEMM_UNROLL_M - 1) & ~(GEMM_UNROLL_M - 1);
+	    min_i = ((min_i / 2 + GEMM_UNROLL_M - 1)/GEMM_UNROLL_M) * GEMM_UNROLL_M;
 	  }
 
 	START_RPCC();

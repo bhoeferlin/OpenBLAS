@@ -186,11 +186,12 @@ OBJ = lapacke_cgb_nancheck.o \
 all: lib
 
 lib: $(OBJ)
-	$(ARCH) $(ARCHFLAGS) ../../$(LAPACKELIB) $(OBJ)
+	$(ARCH) $(ARCHFLAGS) ../../$(LAPACKELIB) $^
 	$(RANLIB) ../../$(LAPACKELIB)
 
-.c.o:
-	$(CC) -c $(CFLAGS) -I ../include -o $@ $<
-
-clean:
+clean: cleanobj
+cleanobj:
 	rm -f *.o
+
+.c.o:
+	$(CC) $(CFLAGS) -I../include -c -o $@ $<

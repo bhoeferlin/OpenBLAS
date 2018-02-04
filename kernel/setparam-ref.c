@@ -684,6 +684,9 @@ static void init_parameter(void) {
 
   int l2 = get_l2_size();
 
+  (void) l2; /* dirty trick to suppress unused variable warning for targets */
+             /* where the GEMM unrolling parameters do not depend on l2 */
+  
   TABLE_NAME.sgemm_q = SGEMM_DEFAULT_Q;
   TABLE_NAME.dgemm_q = DGEMM_DEFAULT_Q;
   TABLE_NAME.cgemm_q = CGEMM_DEFAULT_Q;
@@ -933,6 +936,23 @@ static void init_parameter(void) {
 #endif
 #endif
 
+#ifdef EXCAVATOR
+
+#ifdef DEBUG
+  fprintf(stderr, "Excavator\n");
+#endif
+
+  TABLE_NAME.sgemm_p = SGEMM_DEFAULT_P;
+  TABLE_NAME.dgemm_p = DGEMM_DEFAULT_P;
+  TABLE_NAME.cgemm_p = CGEMM_DEFAULT_P;
+  TABLE_NAME.zgemm_p = ZGEMM_DEFAULT_P;
+#ifdef EXPRECISION
+  TABLE_NAME.qgemm_p = QGEMM_DEFAULT_P;
+  TABLE_NAME.xgemm_p = XGEMM_DEFAULT_P;
+#endif
+#endif
+
+
 #ifdef PILEDRIVER
 
 #ifdef DEBUG
@@ -953,6 +973,22 @@ static void init_parameter(void) {
 
 #ifdef DEBUG
   fprintf(stderr, "Steamroller\n");
+#endif
+
+  TABLE_NAME.sgemm_p = SGEMM_DEFAULT_P;
+  TABLE_NAME.dgemm_p = DGEMM_DEFAULT_P;
+  TABLE_NAME.cgemm_p = CGEMM_DEFAULT_P;
+  TABLE_NAME.zgemm_p = ZGEMM_DEFAULT_P;
+#ifdef EXPRECISION
+  TABLE_NAME.qgemm_p = QGEMM_DEFAULT_P;
+  TABLE_NAME.xgemm_p = XGEMM_DEFAULT_P;
+#endif
+#endif
+
+#ifdef ZEN
+
+#ifdef DEBUG
+  fprintf(stderr, "Zen\n");
 #endif
 
   TABLE_NAME.sgemm_p = SGEMM_DEFAULT_P;
@@ -1005,27 +1041,27 @@ static void init_parameter(void) {
 
 
 
-  TABLE_NAME.sgemm_p = (TABLE_NAME.sgemm_p + SGEMM_DEFAULT_UNROLL_M - 1) & ~(SGEMM_DEFAULT_UNROLL_M - 1);
-  TABLE_NAME.dgemm_p = (TABLE_NAME.dgemm_p + DGEMM_DEFAULT_UNROLL_M - 1) & ~(DGEMM_DEFAULT_UNROLL_M - 1);
-  TABLE_NAME.cgemm_p = (TABLE_NAME.cgemm_p + CGEMM_DEFAULT_UNROLL_M - 1) & ~(CGEMM_DEFAULT_UNROLL_M - 1);
-  TABLE_NAME.zgemm_p = (TABLE_NAME.zgemm_p + ZGEMM_DEFAULT_UNROLL_M - 1) & ~(ZGEMM_DEFAULT_UNROLL_M - 1);
+  TABLE_NAME.sgemm_p = ((TABLE_NAME.sgemm_p + SGEMM_DEFAULT_UNROLL_M - 1)/SGEMM_DEFAULT_UNROLL_M) * SGEMM_DEFAULT_UNROLL_M;
+  TABLE_NAME.dgemm_p = ((TABLE_NAME.dgemm_p + DGEMM_DEFAULT_UNROLL_M - 1)/DGEMM_DEFAULT_UNROLL_M) * DGEMM_DEFAULT_UNROLL_M;
+  TABLE_NAME.cgemm_p = ((TABLE_NAME.cgemm_p + CGEMM_DEFAULT_UNROLL_M - 1)/CGEMM_DEFAULT_UNROLL_M) * CGEMM_DEFAULT_UNROLL_M;
+  TABLE_NAME.zgemm_p = ((TABLE_NAME.zgemm_p + ZGEMM_DEFAULT_UNROLL_M - 1)/ZGEMM_DEFAULT_UNROLL_M) * ZGEMM_DEFAULT_UNROLL_M;
 
 #ifdef CGEMM3M_DEFAULT_UNROLL_M
-  TABLE_NAME.cgemm3m_p = (TABLE_NAME.cgemm3m_p + CGEMM3M_DEFAULT_UNROLL_M - 1) & ~(CGEMM3M_DEFAULT_UNROLL_M - 1);
+  TABLE_NAME.cgemm3m_p = ((TABLE_NAME.cgemm3m_p + CGEMM3M_DEFAULT_UNROLL_M - 1)/CGEMM3M_DEFAULT_UNROLL_M) * CGEMM3M_DEFAULT_UNROLL_M;
 #else
-  TABLE_NAME.cgemm3m_p = (TABLE_NAME.cgemm3m_p + SGEMM_DEFAULT_UNROLL_M - 1) & ~(SGEMM_DEFAULT_UNROLL_M - 1);
+  TABLE_NAME.cgemm3m_p = ((TABLE_NAME.cgemm3m_p + SGEMM_DEFAULT_UNROLL_M - 1)/SGEMM_DEFAULT_UNROLL_M) * SGEMM_DEFAULT_UNROLL_M;
 #endif
 
 #ifdef ZGEMM3M_DEFAULT_UNROLL_M
-  TABLE_NAME.zgemm3m_p = (TABLE_NAME.zgemm3m_p + ZGEMM3M_DEFAULT_UNROLL_M - 1) & ~(ZGEMM3M_DEFAULT_UNROLL_M - 1);
+  TABLE_NAME.zgemm3m_p = ((TABLE_NAME.zgemm3m_p + ZGEMM3M_DEFAULT_UNROLL_M - 1)/ZGEMM3M_DEFAULT_UNROLL_M) * ZGEMM3M_DEFAULT_UNROLL_M;
 #else
-  TABLE_NAME.zgemm3m_p = (TABLE_NAME.zgemm3m_p + DGEMM_DEFAULT_UNROLL_M - 1) & ~(DGEMM_DEFAULT_UNROLL_M - 1);
+  TABLE_NAME.zgemm3m_p = ((TABLE_NAME.zgemm3m_p + DGEMM_DEFAULT_UNROLL_M - 1)/DGEMM_DEFAULT_UNROLL_M) * DGEMM_DEFAULT_UNROLL_M;
 #endif
 
 #ifdef QUAD_PRECISION
-  TABLE_NAME.qgemm_p = (TABLE_NAME.qgemm_p + QGEMM_DEFAULT_UNROLL_M - 1) & ~(QGEMM_DEFAULT_UNROLL_M - 1);
-  TABLE_NAME.xgemm_p = (TABLE_NAME.xgemm_p + XGEMM_DEFAULT_UNROLL_M - 1) & ~(XGEMM_DEFAULT_UNROLL_M - 1);
-  TABLE_NAME.xgemm3m_p = (TABLE_NAME.xgemm3m_p + QGEMM_DEFAULT_UNROLL_M - 1) & ~(QGEMM_DEFAULT_UNROLL_M - 1);
+  TABLE_NAME.qgemm_p = ((TABLE_NAME.qgemm_p + QGEMM_DEFAULT_UNROLL_M - 1)/QGEMM_DEFAULT_UNROLL_M) * QGEMM_DEFAULT_UNROLL_M;
+  TABLE_NAME.xgemm_p = ((TABLE_NAME.xgemm_p + XGEMM_DEFAULT_UNROLL_M - 1)/XGEMM_DEFAULT_UNROLL_M) * XGEMM_DEFAULT_UNROLL_M;
+  TABLE_NAME.xgemm3m_p = ((TABLE_NAME.xgemm3m_p + QGEMM_DEFAULT_UNROLL_M - 1)/QGEMM_DEFAULT_UNROLL_M) * QGEMM_DEFAULT_UNROLL_M;
 #endif
 
 #ifdef DEBUG

@@ -68,6 +68,9 @@ endif
 ifeq ($(TARGET), EXCAVATOR)
 GETARCH_FLAGS := -DFORCE_BARCELONA
 endif
+ifeq ($(TARGET), ZEN)
+GETARCH_FLAGS := -DFORCE_BARCELONA
+endif
 endif
 
 
@@ -96,6 +99,9 @@ ifeq ($(TARGET_CORE), STEAMROLLER)
 GETARCH_FLAGS := -DFORCE_BARCELONA
 endif
 ifeq ($(TARGET_CORE), EXCAVATOR)
+GETARCH_FLAGS := -DFORCE_BARCELONA
+endif
+ifeq ($(TARGET_CORE), ZEN)
 GETARCH_FLAGS := -DFORCE_BARCELONA
 endif
 endif
@@ -159,7 +165,7 @@ ifndef GOTOBLAS_MAKEFILE
 export GOTOBLAS_MAKEFILE = 1
 
 # Generating Makefile.conf and config.h
-DUMMY := $(shell $(MAKE) -C $(TOPDIR) -f Makefile.prebuild CC="$(CC)" FC="$(FC)" HOSTCC="$(HOSTCC)" CFLAGS="$(GETARCH_FLAGS)" BINARY=$(BINARY) USE_OPENMP=$(USE_OPENMP) TARGET_CORE=$(TARGET_CORE) ONLY_CBLAS=$(ONLY_CBLAS) all)
+DUMMY := $(shell $(MAKE) -C $(TOPDIR) -f Makefile.prebuild CC="$(CC)" FC="$(FC)" HOSTCC="$(HOSTCC)" CFLAGS="$(GETARCH_FLAGS)" BINARY=$(BINARY) USE_OPENMP=$(USE_OPENMP) TARGET_CORE=$(TARGET_CORE) ONLY_CBLAS=$(ONLY_CBLAS) TARGET=$(TARGET) all)
 
 ifndef TARGET_CORE
 include $(TOPDIR)/Makefile.conf
@@ -175,6 +181,7 @@ endif
 
 ifeq ($(NUM_THREADS), 1)
 override USE_THREAD = 0
+override USE_OPENMP = 0
 endif
 
 ifdef USE_THREAD
@@ -217,7 +224,9 @@ endif
 #
 
 ifeq ($(OSNAME), Darwin)
+ifndef MACOSX_DEPLOYMENT_TARGET
 export MACOSX_DEPLOYMENT_TARGET=10.6
+endif
 MD5SUM = md5 -r
 endif
 
@@ -232,6 +241,10 @@ endif
 ifeq ($(OSNAME), Linux)
 EXTRALIB	+= -lm
 NO_EXPRECISION = 1
+endif
+
+ifeq ($(OSNAME), Android)
+EXTRALIB	+= -lm
 endif
 
 ifeq ($(OSNAME), AIX)
@@ -406,7 +419,6 @@ CCOMMON_OPT    += -fopenmp
 endif
 
 ifeq ($(C_COMPILER), CLANG)
-$(error OpenBLAS: Clang didn't support OpenMP yet.)
 CCOMMON_OPT    += -fopenmp
 endif
 
@@ -441,12 +453,13 @@ ifneq ($(NO_AVX), 1)
 DYNAMIC_CORE += SANDYBRIDGE BULLDOZER PILEDRIVER STEAMROLLER EXCAVATOR
 endif
 ifneq ($(NO_AVX2), 1)
-DYNAMIC_CORE += HASWELL
+DYNAMIC_CORE += HASWELL ZEN
 endif
 endif
 
+# If DYNAMIC_CORE is not set, DYNAMIC_ARCH cannot do anything, so force it to empty
 ifndef DYNAMIC_CORE
-DYNAMIC_ARCH =
+override DYNAMIC_ARCH=
 endif
 endif
 
@@ -462,7 +475,7 @@ endif
 endif
 endif
 
-ifeq ($(ARCH), mips64)
+ifeq ($(ARCH), $(filter $(ARCH),mips64 mips))
 NO_BINARY_MODE	= 1
 endif
 
@@ -474,6 +487,23 @@ endif
 ifeq ($(ARCH), arm)
 NO_BINARY_MODE  = 1
 BINARY_DEFINED  = 1
+
+CCOMMON_OPT += -marm
+FCOMMON_OPT += -marm
+
+# If softfp abi is mentioned on the command line, force it.
+ifeq ($(ARM_SOFTFP_ABI), 1)
+CCOMMON_OPT += -mfloat-abi=softfp
+FCOMMON_OPT += -mfloat-abi=softfp
+endif
+
+ifeq ($(OSNAME), Android)
+ifeq ($(ARM_SOFTFP_ABI), 1)
+EXTRALIB	+= -lm
+else
+EXTRALIB	+= -Wl,-lm_hard
+endif
+endif
 endif
 
 ifeq ($(ARCH), arm64)
@@ -502,12 +532,15 @@ endif
 
 ifdef NO_BINARY_MODE
 
-ifeq ($(ARCH), mips64)
+ifeq ($(ARCH), $(filter $(ARCH),mips64))
 ifdef BINARY64
 CCOMMON_OPT += -mabi=64
 else
 CCOMMON_OPT += -mabi=n32
 endif
+BINARY_DEFINED = 1
+else ifeq ($(ARCH), $(filter $(ARCH),mips))
+CCOMMON_OPT += -mabi=32
 BINARY_DEFINED = 1
 endif
 
@@ -521,6 +554,26 @@ CCOMMON_OPT += -march=mips64
 FCOMMON_OPT += -march=mips64
 endif
 
+ifeq ($(CORE), P5600)
+CCOMMON_OPT += -mips32r5 -mnan=2008 -mtune=p5600 $(MSA_FLAGS)
+FCOMMON_OPT += -mips32r5 -mnan=2008 -mtune=p5600 $(MSA_FLAGS)
+endif
+
+ifeq ($(CORE), I6400)
+CCOMMON_OPT += -mips64r6 -mnan=2008 -mtune=i6400 $(MSA_FLAGS)
+FCOMMON_OPT += -mips64r6 -mnan=2008 -mtune=i6400 $(MSA_FLAGS)
+endif
+
+ifeq ($(CORE), P6600)
+CCOMMON_OPT += -mips64r6 -mnan=2008 -mtune=p6600 $(MSA_FLAGS)
+FCOMMON_OPT += -mips64r6 -mnan=2008 -mtune=p6600 $(MSA_FLAGS)
+endif
+
+ifeq ($(CORE), I6500)
+CCOMMON_OPT += -mips64r6 -mnan=2008 -mtune=i6400 $(MSA_FLAGS)
+FCOMMON_OPT += -mips64r6 -mnan=2008 -mtune=i6400 $(MSA_FLAGS)
+endif
+
 ifeq ($(OSNAME), AIX)
 BINARY_DEFINED = 1
 endif
@@ -528,10 +581,12 @@ endif
 endif
 
 ifndef BINARY_DEFINED
+ifneq ($(OSNAME), AIX)
 ifdef BINARY64
 CCOMMON_OPT += -m64
 else
 CCOMMON_OPT += -m32
+endif
 endif
 endif
 
@@ -557,14 +612,33 @@ endif
 #  Fortran Compiler dependent settings
 #
 
+ifeq ($(F_COMPILER), FLANG)
+CCOMMON_OPT += -DF_INTERFACE_FLANG
+ifdef BINARY64
+ifdef INTERFACE64
+ifneq ($(INTERFACE64), 0)
+FCOMMON_OPT += -i8
+endif
+endif
+FCOMMON_OPT += -Wall
+else
+FCOMMON_OPT += -Wall
+endif
+ifeq ($(USE_OPENMP), 1)
+FCOMMON_OPT += -fopenmp
+endif
+endif
+
 ifeq ($(F_COMPILER), G77)
 CCOMMON_OPT += -DF_INTERFACE_G77
 FCOMMON_OPT += -Wall
 ifndef NO_BINARY_MODE
+ifneq ($(OSNAME), AIX)
 ifdef BINARY64
 FCOMMON_OPT += -m64
 else
 FCOMMON_OPT += -m32
+endif
 endif
 endif
 endif
@@ -572,11 +646,13 @@ endif
 ifeq ($(F_COMPILER), G95)
 CCOMMON_OPT += -DF_INTERFACE_G95
 FCOMMON_OPT += -Wall
+ifneq ($(OSNAME), AIX)
 ifndef NO_BINARY_MODE
 ifdef BINARY64
 FCOMMON_OPT += -m64
 else
 FCOMMON_OPT += -m32
+endif
 endif
 endif
 endif
@@ -589,23 +665,29 @@ ifneq ($(NO_LAPACK), 1)
 EXTRALIB += -lgfortran
 endif
 ifdef NO_BINARY_MODE
-ifeq ($(ARCH), mips64)
+ifeq ($(ARCH), $(filter $(ARCH),mips64))
 ifdef BINARY64
 FCOMMON_OPT += -mabi=64
 else
 FCOMMON_OPT += -mabi=n32
 endif
+else ifeq ($(ARCH), $(filter $(ARCH),mips))
+FCOMMON_OPT += -mabi=32
 endif
 else
 ifdef BINARY64
+ifneq ($(OSNAME), AIX)
 FCOMMON_OPT += -m64
+endif
 ifdef INTERFACE64
 ifneq ($(INTERFACE64), 0)
 FCOMMON_OPT +=  -fdefault-integer-8
 endif
 endif
 else
+ifneq ($(OSNAME), AIX)
 FCOMMON_OPT += -m32
+endif
 endif
 endif
 ifeq ($(USE_OPENMP), 1)
@@ -677,21 +759,7 @@ FCOMMON_OPT += -i8
 endif
 endif
 endif
-
-ifneq ($(ARCH), mips64)
-ifndef BINARY64
-FCOMMON_OPT += -m32
-else
-FCOMMON_OPT += -m64
-endif
-else
-ifdef BINARY64
-FCOMMON_OPT += -mabi=64
-else
-FCOMMON_OPT += -mabi=n32
-endif
-endif
-
+ 
 ifeq ($(USE_OPENMP), 1)
 FCOMMON_OPT += -mp
 endif
@@ -707,7 +775,7 @@ endif
 endif
 endif
 
-ifeq ($(ARCH), mips64)
+ifeq ($(ARCH), $(filter $(ARCH),mips64 mips))
 ifndef BINARY64
 FCOMMON_OPT += -n32
 else
@@ -737,7 +805,7 @@ endif
 
 ifeq ($(C_COMPILER), OPEN64)
 
-ifeq ($(ARCH), mips64)
+ifeq ($(ARCH), $(filter $(ARCH),mips64 mips))
 ifndef BINARY64
 CCOMMON_OPT += -n32
 else
@@ -896,9 +964,15 @@ SYMBOLSUFFIX =
 endif
 
 ifndef LIBNAMESUFFIX
-LIBPREFIX = lib$(SYMBOLPREFIX)openblas$(SYMBOLSUFFIX)
+LIBNAMEBASE = $(SYMBOLPREFIX)openblas$(SYMBOLSUFFIX)
 else
-LIBPREFIX = lib$(SYMBOLPREFIX)openblas$(SYMBOLSUFFIX)_$(LIBNAMESUFFIX)
+LIBNAMEBASE = $(SYMBOLPREFIX)openblas$(SYMBOLSUFFIX)_$(LIBNAMESUFFIX)
+endif
+
+ifeq ($(OSNAME), CYGWIN_NT)
+LIBPREFIX = cyg$(LIBNAMEBASE)
+else
+LIBPREFIX = lib$(LIBNAMEBASE)
 endif
 
 KERNELDIR	= $(TOPDIR)/kernel/$(ARCH)
@@ -996,7 +1070,7 @@ endif
 override CFLAGS     += $(COMMON_OPT) $(CCOMMON_OPT) -I$(TOPDIR)
 override PFLAGS     += $(COMMON_OPT) $(CCOMMON_OPT) -I$(TOPDIR) -DPROFILE $(COMMON_PROF)
 
-override FFLAGS     += $(FCOMMON_OPT)
+override FFLAGS     += $(COMMON_OPT) $(FCOMMON_OPT)
 override FPFLAGS    += $(FCOMMON_OPT) $(COMMON_PROF)
 #MAKEOVERRIDES =
 
@@ -1057,6 +1131,7 @@ endif
 
 
 LIBDLLNAME   = $(LIBPREFIX).dll
+IMPLIBNAME   = lib$(LIBNAMEBASE).dll.a
 LIBSONAME    = $(LIBNAME:.$(LIBSUFFIX)=.so)
 LIBDYNNAME   = $(LIBNAME:.$(LIBSUFFIX)=.dylib)
 LIBDEFNAME   = $(LIBNAME:.$(LIBSUFFIX)=.def)
@@ -1076,6 +1151,9 @@ ifneq ($(NO_LAPACK), 1)
 LIB_COMPONENTS += LAPACK
 ifneq ($(NO_LAPACKE), 1)
 LIB_COMPONENTS += LAPACKE
+endif
+ifeq ($(BUILD_RELAPACK), 1)
+LIB_COMPONENTS += ReLAPACK
 endif
 endif
 
@@ -1126,6 +1204,8 @@ export HAVE_VFP
 export HAVE_VFPV3
 export HAVE_VFPV4
 export HAVE_NEON
+export HAVE_MSA
+export MSA_FLAGS
 export KERNELDIR
 export FUNCTION_PROFILE
 export TARGET_CORE

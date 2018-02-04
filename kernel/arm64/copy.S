@@ -58,43 +58,43 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	str	TMPF, [Y], #SZ
 #else
 #if !defined(DOUBLE)
-	ld1	{v0.2s}, [X], #8
-	st1	{v0.2s}, [Y], #8
+	ldr	d0, [X], #8
+	str	d0, [Y], #8
 #else
-	ld1	{v0.2d}, [X], #16
-	st1	{v0.2d}, [Y], #16
+	ldr	q0, [X], #16
+	str	q0, [Y], #16
 #endif
 #endif
 
 .endm
 
 .macro KERNEL_F4
-
 #if !defined(COMPLEX)
 #if !defined(DOUBLE)
-	ld1	{v0.4s}, [X], #16
-	st1	{v0.4s}, [Y], #16
+	ldr	q0, [X], #16
+	str	q0, [Y], #16
 #else // DOUBLE
-	ld1	{v0.4s}, [X], #16
-	ld1	{v1.4s}, [X], #16
-	st1	{v0.4s}, [Y], #16
-	st1	{v1.4s}, [Y], #16
+	ldr	q0, [X], #16
+	str	q0, [Y], #16
+	ldr	q1, [X], #16
+	str	q1, [Y], #16
+
 #endif
 #else // COMPLEX
 #if !defined(DOUBLE)
-	ld1	{v0.4s}, [X], #16
-	ld1	{v1.4s}, [X], #16
-	st1	{v0.4s}, [Y], #16
-	st1	{v1.4s}, [Y], #16
+	ldr	q0, [X], #16
+	str	q0, [Y], #16
+	ldr	q1, [X], #16
+	str	q1, [Y], #16
 #else // DOUBLE
-	ld1	{v0.4s}, [X], #16
-	ld1	{v1.4s}, [X], #16
-	ld1	{v2.4s}, [X], #16
-	ld1	{v3.4s}, [X], #16
-	st1	{v0.4s}, [Y], #16
-	st1	{v1.4s}, [Y], #16
-	st1	{v2.4s}, [Y], #16
-	st1	{v3.4s}, [Y], #16
+	ldr	q0, [X], #16
+	str	q0, [Y], #16
+	ldr	q1, [X], #16
+	str	q1, [Y], #16
+	ldr	q2, [X], #16
+	str	q2, [Y], #16
+	ldr	q3, [X], #16
+	str	q3, [Y], #16
 #endif
 #endif
 
@@ -159,50 +159,50 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	PROLOGUE
 
 	cmp	N, xzr
-	ble	copy_kernel_L999
+	ble	.Lcopy_kernel_L999
 
 	cmp	INC_X, #1
-	bne	copy_kernel_S_BEGIN
+	bne	.Lcopy_kernel_S_BEGIN
 	cmp	INC_Y, #1
-	bne	copy_kernel_S_BEGIN
+	bne	.Lcopy_kernel_S_BEGIN
 
-copy_kernel_F_BEGIN:
+.Lcopy_kernel_F_BEGIN:
 
 	asr	I, N, #2
 	cmp	I, xzr
-	beq	copy_kernel_F1
+	beq	.Lcopy_kernel_F1
 
-copy_kernel_F4:
+.Lcopy_kernel_F4:
 
 	KERNEL_F4
 
 	subs	I, I, #1
-	bne	copy_kernel_F4
+	bne	.Lcopy_kernel_F4
 
-copy_kernel_F1:
+.Lcopy_kernel_F1:
 
 	ands	I, N, #3
-	ble	copy_kernel_L999
+	ble	.Lcopy_kernel_L999
 
-copy_kernel_F10:
+.Lcopy_kernel_F10:
 
 	KERNEL_F1
 
 	subs    I, I, #1
-        bne     copy_kernel_F10
+        bne     .Lcopy_kernel_F10
 
 	mov	w0, wzr
 	ret
 
-copy_kernel_S_BEGIN:
+.Lcopy_kernel_S_BEGIN:
 
 	INIT_S
 
 	asr	I, N, #2
 	cmp	I, xzr
-	ble	copy_kernel_S1
+	ble	.Lcopy_kernel_S1
 
-copy_kernel_S4:
+.Lcopy_kernel_S4:
 
 	KERNEL_S1
 	KERNEL_S1
@@ -210,21 +210,21 @@ copy_kernel_S4:
 	KERNEL_S1
 
 	subs	I, I, #1
-	bne	copy_kernel_S4
+	bne	.Lcopy_kernel_S4
 
-copy_kernel_S1:
+.Lcopy_kernel_S1:
 
 	ands	I, N, #3
-	ble	copy_kernel_L999
+	ble	.Lcopy_kernel_L999
 
-copy_kernel_S10:
+.Lcopy_kernel_S10:
 
 	KERNEL_S1
 
 	subs    I, I, #1
-        bne     copy_kernel_S10
+        bne     .Lcopy_kernel_S10
 
-copy_kernel_L999:
+.Lcopy_kernel_L999:
 
 	mov	w0, wzr
 	ret

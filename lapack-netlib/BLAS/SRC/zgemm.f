@@ -2,14 +2,14 @@
 *
 *  =========== DOCUMENTATION ===========
 *
-* Online html documentation available at 
-*            http://www.netlib.org/lapack/explore-html/ 
+* Online html documentation available at
+*            http://www.netlib.org/lapack/explore-html/
 *
 *  Definition:
 *  ===========
 *
 *       SUBROUTINE ZGEMM(TRANSA,TRANSB,M,N,K,ALPHA,A,LDA,B,LDB,BETA,C,LDC)
-* 
+*
 *       .. Scalar Arguments ..
 *       COMPLEX*16 ALPHA,BETA
 *       INTEGER K,LDA,LDB,LDC,M,N
@@ -18,7 +18,7 @@
 *       .. Array Arguments ..
 *       COMPLEX*16 A(LDA,*),B(LDB,*),C(LDC,*)
 *       ..
-*  
+*
 *
 *> \par Purpose:
 *  =============
@@ -97,7 +97,7 @@
 *>
 *> \param[in] A
 *> \verbatim
-*>          A is COMPLEX*16 array of DIMENSION ( LDA, ka ), where ka is
+*>          A is COMPLEX*16 array, dimension ( LDA, ka ), where ka is
 *>           k  when  TRANSA = 'N' or 'n',  and is  m  otherwise.
 *>           Before entry with  TRANSA = 'N' or 'n',  the leading  m by k
 *>           part of the array  A  must contain the matrix  A,  otherwise
@@ -116,7 +116,7 @@
 *>
 *> \param[in] B
 *> \verbatim
-*>          B is COMPLEX*16 array of DIMENSION ( LDB, kb ), where kb is
+*>          B is COMPLEX*16 array, dimension ( LDB, kb ), where kb is
 *>           n  when  TRANSB = 'N' or 'n',  and is  k  otherwise.
 *>           Before entry with  TRANSB = 'N' or 'n',  the leading  k by n
 *>           part of the array  B  must contain the matrix  B,  otherwise
@@ -142,7 +142,7 @@
 *>
 *> \param[in,out] C
 *> \verbatim
-*>          C is COMPLEX*16 array of DIMENSION ( LDC, n ).
+*>          C is COMPLEX*16 array, dimension ( LDC, N )
 *>           Before entry, the leading  m by n  part of the array  C must
 *>           contain the matrix  C,  except when  beta  is zero, in which
 *>           case C need not be set on entry.
@@ -161,12 +161,12 @@
 *  Authors:
 *  ========
 *
-*> \author Univ. of Tennessee 
-*> \author Univ. of California Berkeley 
-*> \author Univ. of Colorado Denver 
-*> \author NAG Ltd. 
+*> \author Univ. of Tennessee
+*> \author Univ. of California Berkeley
+*> \author Univ. of Colorado Denver
+*> \author NAG Ltd.
 *
-*> \date November 2015
+*> \date December 2016
 *
 *> \ingroup complex16_blas_level3
 *
@@ -187,10 +187,10 @@
 *  =====================================================================
       SUBROUTINE ZGEMM(TRANSA,TRANSB,M,N,K,ALPHA,A,LDA,B,LDB,BETA,C,LDC)
 *
-*  -- Reference BLAS level3 routine (version 3.6.0) --
+*  -- Reference BLAS level3 routine (version 3.7.0) --
 *  -- Reference BLAS is a software package provided by Univ. of Tennessee,    --
 *  -- Univ. of California Berkeley, Univ. of Colorado Denver and NAG Ltd..--
-*     November 2015
+*     December 2016
 *
 *     .. Scalar Arguments ..
       COMPLEX*16 ALPHA,BETA

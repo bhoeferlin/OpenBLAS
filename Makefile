@@ -16,14 +16,19 @@ ifneq ($(NO_LAPACK), 1)
 SUBDIRS	+= lapack
 endif
 
+RELA =
+ifeq ($(BUILD_RELAPACK), 1)
+RELA = re_lapack
+endif
+
 LAPACK_NOOPT := $(filter-out -O0 -O1 -O2 -O3 -Ofast,$(LAPACK_FFLAGS))
 
 SUBDIRS_ALL = $(SUBDIRS) test ctest utest exports benchmark ../laswp ../bench
 
-.PHONY : all libs netlib test ctest shared install
-.NOTPARALLEL : all libs prof lapack-test install blas-test
+.PHONY : all libs netlib $(RELA) test ctest shared install
+.NOTPARALLEL : all libs $(RELA) prof lapack-test install blas-test
 
-all :: libs netlib tests shared
+all :: libs netlib $(RELA) tests shared
 	@echo
 	@echo " OpenBLAS build complete. ($(LIB_COMPONENTS))"
 	@echo
@@ -81,22 +86,22 @@ endif
 
 shared :
 ifndef NO_SHARED
-ifeq ($(OSNAME), $(filter $(OSNAME),Linux SunOS))
+ifeq ($(OSNAME), $(filter $(OSNAME),Linux SunOS Android))
 	@$(MAKE) -C exports so
-	@-ln -fs $(LIBSONAME) $(LIBPREFIX).so
-	@-ln -fs $(LIBSONAME) $(LIBPREFIX).so.$(MAJOR_VERSION)
+	@ln -fs $(LIBSONAME) $(LIBPREFIX).so
+	@ln -fs $(LIBSONAME) $(LIBPREFIX).so.$(MAJOR_VERSION)
 endif
 ifeq ($(OSNAME), FreeBSD)
 	@$(MAKE) -C exports so
-	@-ln -fs $(LIBSONAME) $(LIBPREFIX).so
+	@ln -fs $(LIBSONAME) $(LIBPREFIX).so
 endif
 ifeq ($(OSNAME), NetBSD)
 	@$(MAKE) -C exports so
-	@-ln -fs $(LIBSONAME) $(LIBPREFIX).so
+	@ln -fs $(LIBSONAME) $(LIBPREFIX).so
 endif
 ifeq ($(OSNAME), Darwin)
 	@$(MAKE) -C exports dyn
-	@-ln -fs $(LIBDYNNAME) $(LIBPREFIX).dylib
+	@ln -fs $(LIBDYNNAME) $(LIBPREFIX).dylib
 endif
 ifeq ($(OSNAME), WINNT)
 	@$(MAKE) -C exports dll
@@ -108,8 +113,6 @@ endif
 
 tests :
 ifndef NOFORTRAN
-ifndef TARGET
-ifndef CROSS
 	touch $(LIBNAME)
 ifndef NO_FBLAS
 	$(MAKE) -C test all
@@ -117,8 +120,6 @@ ifndef NO_FBLAS
 endif
 ifndef NO_CBLAS
 	$(MAKE) -C ctest all
-endif
-endif
 endif
 endif
 
@@ -219,6 +220,14 @@ ifndef NO_LAPACKE
 endif
 endif
 
+ifeq ($(NO_LAPACK), 1)
+re_lapack :
+
+else
+re_lapack :
+	@$(MAKE) -C relapack
+endif
+
 prof_lapack : lapack_prebuild
 	@$(MAKE) -C $(NETLIB_LAPACK_DIR) lapack_prof
 
@@ -233,7 +242,7 @@ ifndef NOFORTRAN
 	-@echo "CC          = $(CC)" >> $(NETLIB_LAPACK_DIR)/make.inc
 	-@echo "override CFLAGS      = $(LAPACK_CFLAGS)" >> $(NETLIB_LAPACK_DIR)/make.inc
 	-@echo "ARCH        = $(AR)" >> $(NETLIB_LAPACK_DIR)/make.inc
-	-@echo "ARCHFLAGS   = -ru" >> $(NETLIB_LAPACK_DIR)/make.inc
+	-@echo "ARCHFLAGS   = $(ARFLAGS) -ru" >> $(NETLIB_LAPACK_DIR)/make.inc
 	-@echo "RANLIB      = $(RANLIB)" >> $(NETLIB_LAPACK_DIR)/make.inc
 	-@echo "LAPACKLIB   = ../$(LIBNAME)" >> $(NETLIB_LAPACK_DIR)/make.inc
 	-@echo "TMGLIB      = ../$(LIBNAME)" >> $(NETLIB_LAPACK_DIR)/make.inc
@@ -261,6 +270,7 @@ endif
 ifeq ($(BUILD_LAPACK_DEPRECATED), 1)
 	-@echo "BUILD_DEPRECATED      = 1" >> $(NETLIB_LAPACK_DIR)/make.inc
 endif
+	-@echo "LAPACKE_WITH_TMG      = 1" >> $(NETLIB_LAPACK_DIR)/make.inc
 	-@cat  make.inc >> $(NETLIB_LAPACK_DIR)/make.inc
 endif
 
@@ -282,13 +292,13 @@ lapack-timing : large.tgz timing.tgz
 ifndef NOFORTRAN
 	(cd $(NETLIB_LAPACK_DIR); $(TAR) zxf ../timing.tgz TIMING)
 	(cd $(NETLIB_LAPACK_DIR)/TIMING; $(TAR) zxf ../../large.tgz )
-	make -C $(NETLIB_LAPACK_DIR)/TIMING
+	$(MAKE) -C $(NETLIB_LAPACK_DIR)/TIMING
 endif
 
 
 lapack-test :
 	(cd $(NETLIB_LAPACK_DIR)/TESTING && rm -f x* *.out)
-	make -j 1 -C $(NETLIB_LAPACK_DIR)/TESTING xeigtstc  xeigtstd  xeigtsts  xeigtstz  xlintstc  xlintstd  xlintstds  xlintstrfd  xlintstrfz  xlintsts  xlintstz  xlintstzc xlintstrfs xlintstrfc
+	$(MAKE) -j 1 -C $(NETLIB_LAPACK_DIR)/TESTING xeigtstc  xeigtstd  xeigtsts  xeigtstz  xlintstc  xlintstd  xlintstds  xlintstrfd  xlintstrfz  xlintsts  xlintstz  xlintstzc xlintstrfs xlintstrfc
 ifneq ($(CROSS), 1)
 	( cd $(NETLIB_LAPACK_DIR)/INSTALL; ./testlsame; ./testslamch; ./testdlamch; \
         ./testsecond; ./testdsecnd; ./testieee; ./testversion )
@@ -303,7 +313,7 @@ lapack-runtest:
 
 blas-test:
 	(cd $(NETLIB_LAPACK_DIR)/BLAS && rm -f x* *.out)
-	make -j 1 -C $(NETLIB_LAPACK_DIR) blas_testing
+	$(MAKE) -j 1 -C $(NETLIB_LAPACK_DIR) blas_testing
 	(cd $(NETLIB_LAPACK_DIR)/BLAS && cat *.out)
 
 
@@ -330,6 +340,7 @@ endif
 	@touch $(NETLIB_LAPACK_DIR)/make.inc
 	@$(MAKE) -C $(NETLIB_LAPACK_DIR) clean
 	@rm -f $(NETLIB_LAPACK_DIR)/make.inc $(NETLIB_LAPACK_DIR)/lapacke/include/lapacke_mangling.h
+	@$(MAKE) -C relapack clean
 	@rm -f *.grd Makefile.conf_last config_last.h
 	@(cd $(NETLIB_LAPACK_DIR)/TESTING && rm -f x* *.out testing_results.txt)
 	@echo Done.

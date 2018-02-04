@@ -59,7 +59,7 @@ static void dgemv_kernel_4x4( BLASLONG n, FLOAT **ap, FLOAT *x, FLOAT *y)
         "cmpq           $0, %1                         \n\t"
         "je             3f                      \n\t"
 
-	".align 16				 \n\t"
+	// ".align 16				 \n\t"
 	"1:				 \n\t"
 	// "prefetcht0	 384(%2,%0,8)		 \n\t"
 	"vmovups	(%2,%0,8), %%ymm12       \n\t"	// 4 * x
@@ -107,9 +107,9 @@ static void dgemv_kernel_4x4( BLASLONG n, FLOAT **ap, FLOAT *x, FLOAT *y)
 	"vzeroupper			 \n\t"
 
 	:
-        : 
-          "r" (i),	// 0	
-	  "r" (n),  	// 1
+          "+r" (i),	// 0	
+	  "+r" (n)  	// 1
+	:
           "r" (x),      // 2
           "r" (y),      // 3
           "r" (ap[0]),  // 4

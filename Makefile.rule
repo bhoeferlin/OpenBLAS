@@ -3,7 +3,7 @@
 #
 
 # This library's version
-VERSION = 0.2.16.dev
+VERSION = 0.3.0.dev
 
 # If you set the suffix, the library name will be libopenblas_$(LIBNAMESUFFIX).a
 # and libopenblas_$(LIBNAMESUFFIX).so. Meanwhile, the soname in shared library
@@ -52,6 +52,7 @@ VERSION = 0.2.16.dev
 # USE_THREAD = 0
 
 # If you're going to use this library with OpenMP, please comment it in.
+# This flag is always set for POWER8. Don't modify the flag 
 # USE_OPENMP = 1
 
 # You can define maximum number of threads. Basically it should be
@@ -80,7 +81,10 @@ VERSION = 0.2.16.dev
 # NO_LAPACKE = 1
 
 # Build LAPACK Deprecated functions since LAPACK 3.6.0
-# BUILD_LAPACK_DEPRECATED = 1
+BUILD_LAPACK_DEPRECATED = 1
+
+# Build RecursiveLAPACK on top of LAPACK
+# BUILD_RELAPACK = 1
 
 # If you want to use legacy threaded Level 3 implementation.
 # USE_SIMPLE_THREADED_LEVEL3 = 1
@@ -96,7 +100,7 @@ VERSION = 0.2.16.dev
 NO_WARMUP = 1
 
 # If you want to disable CPU/Memory affinity on Linux.
-NO_AFFINITY = 1
+#NO_AFFINITY = 1
 
 # if you are compiling for Linux and you have more than 16 numa nodes or more than 256 cpus
 # BIGNUMA = 1
@@ -112,7 +116,10 @@ NO_AFFINITY = 1
 # NO_PARALLEL_MAKE = 1
 
 # Force number of make jobs. The default is the number of logical CPU of the host.
-# This is particularly useful when using distcc
+# This is particularly useful when using distcc.
+# A negative value will disable adding a -j flag to make, allowing to use a parent
+# make -j value. This is useful to call OpenBLAS make from an other project
+# makefile
 # MAKE_NB_JOBS = 2
 
 # If you would like to know minute performance report of GotoBLAS.
@@ -150,10 +157,12 @@ NO_AFFINITY = 1
 
 # Common Optimization Flag;
 # The default -O2 is enough.
+# Flags for POWER8 are defined in Makefile.power. Don't modify COMMON_OPT
 # COMMON_OPT = -O2
 
 # gfortran option for LAPACK
 # enable this flag only on 64bit Linux and if you need a thread safe lapack library
+# Flags for POWER8 are defined in Makefile.power. Don't modify FCOMMON_OPT
 # FCOMMON_OPT = -frecursive
 
 # Profiling flags

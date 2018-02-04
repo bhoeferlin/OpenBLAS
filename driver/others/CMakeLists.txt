@@ -1,4 +1,5 @@
-include_directories(${CMAKE_SOURCE_DIR})
+include_directories(${PROJECT_SOURCE_DIR})
+include_directories(${PROJECT_BINARY_DIR})
 
 if (${CORE} STREQUAL "PPC440")
   set(MEMORY memory_qalloc.c)
@@ -6,11 +7,13 @@ else ()
   set(MEMORY memory.c)
 endif ()
 
-if (SMP)
+if (USE_THREAD)
 
   if (USE_OPENMP)
     set(BLAS_SERVER blas_server_omp.c)
   elseif (${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+    set(BLAS_SERVER blas_server_win32.c)
+  elseif (${CMAKE_SYSTEM_NAME} STREQUAL "WindowsStore")
     set(BLAS_SERVER blas_server_win32.c)
   endif ()
 
@@ -33,6 +36,7 @@ set(COMMON_SOURCES
   xerbla.c
   openblas_set_num_threads.c
   openblas_error_handle.c
+  openblas_env.c
   openblas_get_num_procs.c
   openblas_get_num_threads.c
 )

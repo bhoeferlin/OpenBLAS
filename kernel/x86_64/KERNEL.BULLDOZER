@@ -7,6 +7,7 @@ CAXPYKERNEL = caxpy.c
 ZAXPYKERNEL = zaxpy.c
 
 SDOTKERNEL     = sdot.c
+DSDOTKERNEL    = sdot.c
 CDOTKERNEL     = cdot.c
 ZDOTKERNEL     = zdot.c
 
@@ -18,7 +19,7 @@ SSYMV_L_KERNEL = ssymv_L.c
 SGEMVNKERNEL = sgemv_n_4.c
 SGEMVTKERNEL = sgemv_t_4.c
 
-ZGEMVNKERNEL = zgemv_n_dup.S
+ZGEMVNKERNEL = zgemv_n_4.c
 ZGEMVTKERNEL = zgemv_t_4.c
 
 DGEMVNKERNEL = dgemv_n_bulldozer.S
@@ -69,9 +70,9 @@ ZGEMMOTCOPYOBJ =  zgemm_otcopy$(TSUFFIX).$(SUFFIX)
 CGEMM3MKERNEL    =  zgemm3m_kernel_8x4_barcelona.S
 ZGEMM3MKERNEL    =  zgemm3m_kernel_4x4_barcelona.S
 
-STRSMKERNEL_LN  = strsm_kernel_LN_bulldozer.c 
-STRSMKERNEL_LT  = strsm_kernel_LT_bulldozer.c 
-STRSMKERNEL_RN  = strsm_kernel_RN_bulldozer.c 
+STRSMKERNEL_LN  = strsm_kernel_LN_bulldozer.c
+STRSMKERNEL_LT  = strsm_kernel_LT_bulldozer.c
+STRSMKERNEL_RN  = strsm_kernel_RN_bulldozer.c
 STRSMKERNEL_RT  = strsm_kernel_RT_bulldozer.c
 
 DTRSMKERNEL_LN  = dtrsm_kernel_LN_bulldozer.c

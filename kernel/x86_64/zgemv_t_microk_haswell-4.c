@@ -46,7 +46,7 @@ static void zgemv_kernel_4x4( BLASLONG n, FLOAT **ap, FLOAT *x, FLOAT *y, FLOAT 
 	"vxorpd		%%ymm14, %%ymm14, %%ymm14	\n\t"
 	"vxorpd		%%ymm15, %%ymm15, %%ymm15	\n\t"
 
-	".align 16				        \n\t"
+	//	".align 16				        \n\t"
 	"1:				        \n\t"
 
         "prefetcht0      192(%2,%0,8)                   \n\t"
@@ -181,9 +181,9 @@ static void zgemv_kernel_4x4( BLASLONG n, FLOAT **ap, FLOAT *x, FLOAT *y, FLOAT 
 	"vzeroupper			 \n\t"
 
 	:
-        : 
-          "r" (i),	// 0	
-	  "r" (n),  	// 1
+          "+r" (i),	// 0	
+	  "+r" (n)  	// 1
+	:
           "r" (x),      // 2
           "r" (y),      // 3
           "r" (ap[0]),  // 4
@@ -219,7 +219,7 @@ static void zgemv_kernel_4x2( BLASLONG n, FLOAT **ap, FLOAT *x, FLOAT *y, FLOAT 
 	"vxorpd		%%ymm10, %%ymm10, %%ymm10	\n\t" // temp
 	"vxorpd		%%ymm11, %%ymm11, %%ymm11	\n\t" // temp
 
-	".align 16				        \n\t"
+	//	".align 16				        \n\t"
 	"1:				        \n\t"
 
         "prefetcht0      192(%2,%0,8)                   \n\t"
@@ -308,9 +308,9 @@ static void zgemv_kernel_4x2( BLASLONG n, FLOAT **ap, FLOAT *x, FLOAT *y, FLOAT 
 	"vzeroupper			 \n\t"
 
 	:
-        : 
-          "r" (i),	// 0	
-	  "r" (n),  	// 1
+          "+r" (i),	// 0	
+	  "+r" (n)  	// 1
+	:
           "r" (x),      // 2
           "r" (y),      // 3
           "r" (ap[0]),  // 4
@@ -341,7 +341,7 @@ static void zgemv_kernel_4x1( BLASLONG n, FLOAT *ap, FLOAT *x, FLOAT *y, FLOAT *
 	"vxorpd		%%ymm8 , %%ymm8 , %%ymm8 	\n\t" // temp
 	"vxorpd		%%ymm9 , %%ymm9 , %%ymm9 	\n\t" // temp
 
-	".align 16				        \n\t"
+	//	".align 16				        \n\t"
 	"1:				        \n\t"
 
         "prefetcht0      192(%2,%0,8)                   \n\t"
@@ -407,9 +407,9 @@ static void zgemv_kernel_4x1( BLASLONG n, FLOAT *ap, FLOAT *x, FLOAT *y, FLOAT *
 	"vzeroupper			 \n\t"
 
 	:
-        : 
-          "r" (i),	// 0	
-	  "r" (n),  	// 1
+          "+r" (i),	// 0	
+	  "+r" (n)  	// 1
+	:
           "r" (x),      // 2
           "r" (y),      // 3
           "r" (ap),     // 4

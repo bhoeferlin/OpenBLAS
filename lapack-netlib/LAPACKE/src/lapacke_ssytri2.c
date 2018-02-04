@@ -28,7 +28,7 @@
 *****************************************************************************
 * Contents: Native high-level C interface to LAPACK function ssytri2
 * Author: Intel Corporation
-* Generated November 2015
+* Generated June 2016
 *****************************************************************************/
 
 #include "lapacke_utils.h"
@@ -38,16 +38,18 @@ lapack_int LAPACKE_ssytri2( int matrix_layout, char uplo, lapack_int n, float* a
 {
     lapack_int info = 0;
     lapack_int lwork = -1;
-    lapack_complex_float* work = NULL;
-    lapack_complex_float work_query;
+    float* work = NULL;
+    float work_query;
     if( matrix_layout != LAPACK_COL_MAJOR && matrix_layout != LAPACK_ROW_MAJOR ) {
         LAPACKE_xerbla( "LAPACKE_ssytri2", -1 );
         return -1;
     }
 #ifndef LAPACK_DISABLE_NAN_CHECK
-    /* Optionally check input matrices for NaNs */
-    if( LAPACKE_ssy_nancheck( matrix_layout, uplo, n, a, lda ) ) {
-        return -4;
+    if( LAPACKE_get_nancheck() ) {
+        /* Optionally check input matrices for NaNs */
+        if( LAPACKE_ssy_nancheck( matrix_layout, uplo, n, a, lda ) ) {
+            return -4;
+        }
     }
 #endif
     /* Query optimal working array(s) size */
@@ -58,8 +60,8 @@ lapack_int LAPACKE_ssytri2( int matrix_layout, char uplo, lapack_int n, float* a
     }
     lwork = LAPACK_C2INT( work_query );
     /* Allocate memory for work arrays */
-    work = (lapack_complex_float*)
-        LAPACKE_malloc( sizeof(lapack_complex_float) * lwork );
+    work = (float*)
+        LAPACKE_malloc( sizeof(float) * lwork );
     if( work == NULL ) {
         info = LAPACK_WORK_MEMORY_ERROR;
         goto exit_level_0;
