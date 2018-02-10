@@ -155,7 +155,7 @@ void CNAME(enum CBLAS_ORDER order, enum CBLAS_UPLO Uplo,
   FLOAT *a = (FLOAT*) va;
   FLOAT *x = (FLOAT*) vx;
   
-  int trans, uplo, unit;
+  int trans, uplo, unit, nthreads;
   blasint info;
   FLOAT *buffer;
 
